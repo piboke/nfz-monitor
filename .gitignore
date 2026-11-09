@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.angular/
+**/coverage/
+.etl-work/
+.site-build/
+.DS_Store
+*.log
+src/atlas-web/public/data/

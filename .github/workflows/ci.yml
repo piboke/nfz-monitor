@@ -1,0 +1,34 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: src/atlas-web/package-lock.json
+      - run: dotnet restore NfzAtlas.sln
+      - run: dotnet build NfzAtlas.sln --no-restore --configuration Release
+      - run: dotnet test NfzAtlas.sln --no-build --configuration Release --logger 'trx;LogFileName=results.trx'
+      - run: dotnet format NfzAtlas.sln --verify-no-changes --no-restore
+      - run: npm ci --prefix src/atlas-web
+      - run: npm run check --prefix src/atlas-web
+      - run: npm test --prefix src/atlas-web
+      - run: npm run build --prefix src/atlas-web -- --base-href '/${{ github.event.repository.name }}/'
