@@ -52,6 +52,13 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   ngOnDestroy() {
     this.chart?.destroy();
   }
+  exportPng() {
+    this.draw(true);
+    this.chart?.resize(1000, 340);
+    const image = this.canvas.nativeElement.toDataURL("image/png");
+    this.draw();
+    return { title: this.title, image };
+  }
   @HostListener("window:beforeprint")
   beforePrint() {
     this.draw(true);

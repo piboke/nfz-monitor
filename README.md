@@ -57,7 +57,7 @@ Automat **Synchronizacja NFZ** działa codziennie o 02:17 UTC (03:17 zimą / 04:
 - Mapa: Leaflet + markercluster, wyłącznie współrzędne NFZ. Puste współrzędne pozostają puste. Kafelki OSM pobierane tylko po otwarciu mapy, bez prefetch i geokodowania.
 - Radar: obserwacje, rewizje źródłowych okresów, porównania na wspólnych kolejkach, aktualność i sygnały dużych zmian.
 - Raporty: siedem konfiguracji, wykresy liniowe i słupkowe, tabela zmian procentowych, grupowanie oraz konfiguracja w URL.
-- **Pobierz raport PDF** otwiera natywny wydruk. Wybierz „Zapisz jako PDF”, format A4. Natywne fonty zapewniają polskie znaki; wydruk obejmuje wykresy, powtarzane nagłówki tabel, źródła i metodologię. Żadne dane nie są wysyłane do usługi generowania PDF.
+- **Pobierz raport PDF** generuje i pobiera dokument A4 bezpośrednio w przeglądarce przez pdfmake. Lokalne fonty Roboto zapewniają polskie znaki. Dokument ma wykresy, mapę wektorową, powtarzane nagłówki tabel, numerację stron, źródła i metodologię. Generator i fonty są ładowane dopiero po wybraniu eksportu. Żadne dane nie są wysyłane do usługi generowania PDF.
 - Jasny i ciemny motyw, tabele alternatywne dla wykresów, etykiety formularzy, obsługa klawiatury i responsywny układ.
 
 ## Dokumentacja

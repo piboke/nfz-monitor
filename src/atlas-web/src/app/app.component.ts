@@ -5,6 +5,8 @@ import {
   computed,
   inject,
   signal,
+  ViewChildren,
+  QueryList,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -21,6 +23,7 @@ import {
 import { filterRows, median, periodSeries, changes } from "./analytics.mjs";
 import { ChartComponent } from "./chart.component";
 import { MapComponent } from "./map.component";
+import { downloadReport, type PdfReport } from "./report-pdf";
 
 @Component({
   selector: "app-root",
@@ -29,6 +32,8 @@ import { MapComponent } from "./map.component";
   templateUrl: "./app.component.html",
 })
 export class AppComponent implements OnInit {
+  @ViewChildren(ChartComponent) charts!: QueryList<ChartComponent>;
+  readonly exporting = signal(false);
   readonly data = inject(DataService);
   readonly regions = REGIONS;
   readonly regionCodes = Object.keys(REGIONS).sort();
@@ -684,9 +689,94 @@ export class AppComponent implements OnInit {
       );
     }
   }
-  print() {
+  async print() {
+    if (this.loading() || this.exporting() || this.reportValidation) return;
+    this.exporting.set(true);
     this.generatedAt = new Date();
-    window.print();
+    this.updateUrl();
+    this.error.set("");
+    try {
+      const manifest = this.data.manifest()!;
+      const report: PdfReport = {
+        title: this.reportTitle,
+        generatedAt: this.generatedAt,
+        sourceDate: manifest.lastSync,
+        scope: manifest.scope,
+        national: manifest.national,
+        complete: manifest.complete,
+        services: this.reportServices,
+        geography:
+          (this.filters.province
+            ? REGIONS[this.filters.province]
+            : "Cały dostępny zakres") +
+          " / " +
+          (this.filters.county || "wszystkie powiaty"),
+        category:
+          this.filters.category === "1"
+            ? "stabilny"
+            : this.filters.category === "2"
+              ? "pilny"
+              : "obie (oddzielne kolejki)",
+        from: this.from,
+        to: this.to,
+        metric: this.metricLabel,
+        warnings: manifest.warnings,
+        queueCount: this.filtered().length,
+        awaiting: this.sum(this.filtered(), "awaiting"),
+        medianPcus: this.medianPcus,
+        pairs: this.comparison.length,
+        periods: this.chartSeries,
+        regions: this.regionCodes.map((code) => ({
+          code,
+          name: REGIONS[code],
+          value: this.reportRegionValue(code),
+          x: this.regionPositions[code][0],
+          y: this.regionPositions[code][1],
+        })),
+        groups: this.groups,
+        changes: this.comparison.map((c) => ({
+          name: this.queueName(c.id, c.case),
+          delta: c.delta,
+          percent: c.percent,
+          signal: this.isJump(c.delta, c.percent)
+            ? "Duża zmiana - wymaga weryfikacji"
+            : "-",
+        })),
+        stale: this.filtered()
+          .filter(
+            (q) =>
+              this.freshness(q) !== "Dane aktualne" ||
+              q.awaiting === null ||
+              q.pcus === null,
+          )
+          .map((q) => ({
+            name: q.provider + " / " + q.locality,
+            period: q.reportingPeriod,
+            date: q.pcusUpdatedAt,
+            status: this.freshness(q),
+          })),
+        events: this.filteredEvents.map((event) => ({
+          name: this.queueName(event.queueId, event.category),
+          message: event.message,
+        })),
+        charts: this.charts.toArray().map((chart) => chart.exportPng()),
+        mapSvg: "",
+        url: location.href,
+      };
+      const response = await fetch(new URL("poland.svg", document.baseURI));
+      if (!response.ok)
+        throw new Error(
+          "Nie udało się wczytać mapy raportu. Spróbuj ponownie.",
+        );
+      report.mapSvg = await response.text();
+      await downloadReport(report);
+    } catch (error) {
+      this.error.set(
+        "Nie udało się wygenerować PDF. " + (error as Error).message,
+      );
+    } finally {
+      this.exporting.set(false);
+    }
   }
   sum(rows: QueueRow[], key: "awaiting" | "removed") {
     const known = rows

@@ -660,9 +660,11 @@
               <button
                 class="button primary"
                 (click)="print()"
-                [disabled]="loading() || !!error() || !!reportValidation"
+                [disabled]="
+                  loading() || exporting() || !!error() || !!reportValidation
+                "
               >
-                Pobierz raport PDF ↓
+                {{ exporting() ? "Generowanie PDF…" : "Pobierz raport PDF ↓" }}
               </button>
             }
           </div>
