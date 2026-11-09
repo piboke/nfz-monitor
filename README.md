@@ -66,6 +66,8 @@ Automat **Synchronizacja NFZ** działa codziennie o 02:17 UTC (03:17 zimą / 04:
 - [Zweryfikowany kontrakt API i wolumen](docs/api-research.md)
 - [Metodologia](docs/methodology.md)
 - [Operacje, odtwarzanie i limity](docs/operations.md)
+- [Weryfikacja wdrożenia](docs/verification.md)
+- [Licencje zasobów](docs/assets.md)
 - [Wymagania źródłowe](docs/requirements.md)
 
 Wpisy w kolejkach nie są liczbą unikalnych pacjentów, PCUŚ nie gwarantuje daty przyjęcia, a długość kolejki nie mierzy jakości leczenia. Braki nigdy nie są zastępowane zerem.
