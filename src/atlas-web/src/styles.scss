@@ -119,6 +119,13 @@ p + p {
   font-style: normal;
   color: var(--red);
 }
+.brand:hover em,
+.brand:hover .brand-mark span {
+  color: var(--ink);
+}
+.brand:hover .brand-mark i {
+  background: var(--ink);
+}
 .brand-mark {
   font-size: 42px;
   letter-spacing: -0.12em;

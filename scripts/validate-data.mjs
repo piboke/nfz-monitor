@@ -1,6 +1,10 @@
 import { readFile, stat } from "node:fs/promises";
 import { resolve } from "node:path";
-const root = resolve(import.meta.dirname, "../data");
+const root = resolve(
+  import.meta.dirname,
+  "..",
+  process.env.NFZ_DATA_DIR || "data",
+);
 const m = JSON.parse(await readFile(resolve(root, "manifest.json"), "utf8"));
 if (m.schemaVersion !== "1.0" || !m.complete)
   throw new Error("Niekompletny lub nieobsługiwany zbiór.");

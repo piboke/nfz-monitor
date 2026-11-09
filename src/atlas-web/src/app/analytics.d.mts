@@ -13,3 +13,5 @@ export function changes(
   from: string,
   to: string,
 ): { id: string; case: number; delta: number; percent: number | null }[];
+
+export function providerFileKey(code: string): string;

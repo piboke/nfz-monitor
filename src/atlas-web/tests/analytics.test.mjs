@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  providerFileKey,
   median,
   filterRows,
   periodSeries,
@@ -108,4 +109,11 @@ test("does not compare a queue after changing facility or benefit identity", () 
     awaiting: 20,
   };
   assert.deepEqual(changes([base, next], "awaiting", "2026-09", "2026-10"), []);
+});
+
+test("provider filenames preserve numeric compatibility and safely encode opaque NFZ codes", () => {
+  assert.equal(providerFileKey("123456"), "123456");
+  assert.equal(providerFileKey("061/100043"), "p-3036312f313030303433");
+  assert.equal(providerFileKey("08R/20272"), "p-3038522f3230323732");
+  assert.ok(!providerFileKey("../a").includes("/"));
 });

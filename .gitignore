@@ -9,3 +9,5 @@
 .DS_Store
 *.log
 src/atlas-web/public/data/
+
+.etl-local/

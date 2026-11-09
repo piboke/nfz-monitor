@@ -1,4 +1,5 @@
 import { Injectable, signal } from "@angular/core";
+import { providerFileKey } from "./analytics.mjs";
 import {
   Manifest,
   QueueRow,
@@ -107,10 +108,9 @@ export class DataService {
     return { rows, history: points, events };
   }
   async provider(province: string, code: string) {
-    if (!/^\d{1,20}$/.test(code))
-      throw new Error("Nieprawidłowy kod świadczeniodawcy.");
+    const fileKey = providerFileKey(code);
     return this.read<{ rows: QueueRow[]; history: HistoryPoint[] }>(
-      `aggregates/${this.manifest()!.generation}/providers/${province}/${code}.json`,
+      `aggregates/${this.manifest()!.generation}/providers/${province}/${fileKey}.json`,
     );
   }
 }

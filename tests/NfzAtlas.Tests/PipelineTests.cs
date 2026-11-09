@@ -123,6 +123,19 @@ public sealed class PipelineTests : IDisposable
         var source = new FakeSource((_, p) => new(p == 1 ? 26 : 27, p, 25, p == 1, p == 1 ? records : [records[0]]));
         await Assert.ThrowsAsync<InvalidDataException>(() => new Crawler(source, root).Download(new("07", 1), default));
     }
+    [Theory]
+    [InlineData("061/100043", "p-3036312f313030303433")]
+    [InlineData("08R/20272", "p-3038522f3230323732")]
+    public async Task PublishesOpaqueProviderCodesWithoutChangingSourceIdentity(string code, string fileKey)
+    {
+        var node = JsonNode.Parse(Fixture().GetProperty("data")[0].GetRawText())!;
+        node["attributes"]!["provider-code"] = code;
+        var manifest = await new Publisher(root).Publish([(new("07", 1), new[] { JsonSerializer.SerializeToElement(node) })], false, DateTimeOffset.UtcNow, default);
+        Assert.Equal(fileKey, Identity.ProviderFileKey(code));
+        var path = Path.Combine(root, "aggregates", manifest.Generation, "providers", "07", fileKey + ".json");
+        var detail = await JsonFiles.Read<JsonElement>(path);
+        Assert.Equal(code, detail.GetProperty("rows")[0].GetProperty("providerCode").GetString());
+    }
     [Fact]
     public async Task PublicationIsIdempotentAndPreservesHistoryAcrossBuilds()
     {

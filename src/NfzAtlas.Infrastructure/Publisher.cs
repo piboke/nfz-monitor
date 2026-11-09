@@ -120,8 +120,7 @@ public sealed class Publisher(string dataRoot)
         var historyByProvider = allHistory.GroupBy(o => (o.Queue.Province, o.Queue.ProviderCode)).ToDictionary(g => g.Key, g => Analytics.Series(g));
         foreach (var provider in allRows.GroupBy(q => (q.Province, q.ProviderCode)))
         {
-            if (!System.Text.RegularExpressions.Regex.IsMatch(provider.Key.ProviderCode, @"^\d{1,20}$")) throw new InvalidDataException("Nieobsługiwany format kodu świadczeniodawcy.");
-            await JsonFiles.Write(Path.Combine(stage, "providers", provider.Key.Province, provider.Key.ProviderCode + ".json"), new { rows = provider.ToArray(), history = historyByProvider[provider.Key] }, ct);
+            await JsonFiles.Write(Path.Combine(stage, "providers", provider.Key.Province, Identity.ProviderFileKey(provider.Key.ProviderCode) + ".json"), new { rows = provider.ToArray(), history = historyByProvider[provider.Key] }, ct);
         }
         var bytes = Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length);
         if (bytes > 700L * 1024 * 1024) throw new IOException("Zestawienia przekroczyły budżet 700 MiB GitHub Pages. Publikacja wstrzymana.");

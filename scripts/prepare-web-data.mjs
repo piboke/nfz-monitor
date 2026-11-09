@@ -1,7 +1,7 @@
 import { cp, mkdir, readFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
-const source = resolve(root, "data"),
+const source = resolve(root, process.env.NFZ_DATA_DIR || "data"),
   target = resolve(root, "src/atlas-web/public/data");
 const manifest = JSON.parse(
   await readFile(resolve(source, "manifest.json"), "utf8"),
