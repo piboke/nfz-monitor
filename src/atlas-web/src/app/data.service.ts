@@ -1,5 +1,12 @@
 import { Injectable, signal } from "@angular/core";
-import { Manifest, QueueRow, HistoryPoint, Summary, Shard } from "./models";
+import {
+  Manifest,
+  QueueRow,
+  HistoryPoint,
+  Summary,
+  Shard,
+  QualityEvent,
+} from "./models";
 @Injectable({ providedIn: "root" })
 export class DataService {
   readonly manifest = signal<Manifest | null>(null);
@@ -29,6 +36,8 @@ export class DataService {
     return (await this.cache.get(path)) as T;
   }
   async init() {
+    this.error.set("");
+    this.cache.delete("manifest.json");
     try {
       const m = await this.read<Manifest>("manifest.json");
       if (m.schemaVersion !== "1.0")
@@ -60,6 +69,7 @@ export class DataService {
       );
     const rows: QueueRow[] = [];
     const points: HistoryPoint[] = [];
+    const events: QualityEvent[] = [];
     for (let i = 0; i < shards.length; i += 4) {
       const batch = shards.slice(i, i + 4);
       rows.push(
@@ -76,7 +86,25 @@ export class DataService {
           ).flat(),
         );
     }
-    return { rows, history: points };
+    if (history)
+      for (let i = 0; i < shards.length; i += 4) {
+        events.push(
+          ...(
+            await Promise.all(
+              shards
+                .slice(i, i + 4)
+                .map(async (shard) =>
+                  (
+                    await this.read<QualityEvent[]>(
+                      shard.path.replace(/\.json$/, ".quality.json"),
+                    )
+                  ).map((event) => ({ ...event, category: shard.case })),
+                ),
+            )
+          ).flat(),
+        );
+      }
+    return { rows, history: points, events };
   }
   async provider(province: string, code: string) {
     if (!/^\d{1,20}$/.test(code))

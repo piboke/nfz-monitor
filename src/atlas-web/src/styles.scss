@@ -1278,3 +1278,52 @@ summary {
     break-inside: avoid;
   }
 }
+
+@media print {
+  .chart-frame {
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+  }
+  .chart-frame canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+  .report-document table {
+    break-inside: avoid;
+  }
+}
+@media print {
+  .report-document .panel {
+    break-inside: avoid;
+  }
+}
+.print-only {
+  display: none;
+}
+.quality-chunk + .quality-chunk {
+  margin-top: 18px;
+}
+@media print {
+  .report-document .print-section,
+  .quality-chunk.following {
+    page-break-before: always;
+    break-before: page;
+  }
+  .print-only {
+    display: block;
+    font-size: 12pt;
+    margin: 0 0 16px;
+  }
+  .quality-chunk {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .report-document .panel {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+}

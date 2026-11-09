@@ -24,9 +24,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Sprawdź dostępność gałęzi danych
+        id: data-branch
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin data >/dev/null; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          else
+            status=$?
+            if test "$status" -eq 2; then
+              echo 'available=false' >> "$GITHUB_OUTPUT"
+            else
+              exit "$status"
+            fi
+          fi
       - name: Dołącz ostatni kompletny zbiór z gałęzi danych
         uses: actions/checkout@v4
-        continue-on-error: true
+        if: steps.data-branch.outputs.available == 'true'
         id: archive
         with:
           ref: data
@@ -35,8 +49,11 @@ jobs:
           sparse-checkout: data
       - name: Wybierz zestaw danych
         shell: bash
+        env:
+          HAS_DATA: ${{ steps.data-branch.outputs.available }}
         run: |
-          if test -f archive/data/manifest.json; then
+          if test "$HAS_DATA" = true; then
+            test -f archive/data/manifest.json
             rm -rf data
             cp -R archive/data data
           fi

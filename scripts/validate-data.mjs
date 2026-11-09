@@ -6,13 +6,18 @@ if (m.schemaVersion !== "1.0" || !m.complete)
   throw new Error("Niekompletny lub nieobsługiwany zbiór.");
 if (
   m.national &&
-  (m.regions.length !== 16 || new Set(m.shards.map((s) => s.case)).size !== 2)
+  (m.regions.length !== 16 ||
+    new Set(m.shards.map((s) => s.province + "|" + s.case)).size !== 32)
 )
   throw new Error("Nieprawidłowy zakres krajowy.");
 if (m.shards.reduce((n, s) => n + s.count, 0) !== m.queueCount)
   throw new Error("Niezgodna liczba kolejek.");
 for (const s of m.shards) {
-  for (const p of [s.path, s.historyPath]) {
+  for (const p of [
+    s.path,
+    s.historyPath,
+    s.path.replace(/\.json$/, ".quality.json"),
+  ]) {
     if (!p.startsWith(`aggregates/${m.generation}/`) || p.includes(".."))
       throw new Error("Nieprawidłowa ścieżka.");
     await stat(resolve(root, p));

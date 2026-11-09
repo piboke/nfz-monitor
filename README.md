@@ -47,7 +47,7 @@ Automat **Synchronizacja NFZ** działa codziennie o 02:17 UTC (03:17 zimą / 04:
 
 1. Publiczne repozytorium, Settings → Pages → Source: **GitHub Actions**.
 2. Actions muszą być włączone. Workflow ETL wymaga `contents: write`; deployment `pages: write` i `id-token: write`.
-3. Wypchnij kod na `main`. Workflow CI sprawdzi kod; GitHub Pages zbuduje frontend; pierwsza synchronizacja uruchomi się przy dodaniu workflow.
+3. Wypchnij kod na `main`. Workflow CI sprawdzi kod; GitHub Pages zbuduje frontend; pierwszą synchronizację uruchom ręcznie w Actions, a następne wykona harmonogram.
 4. Po udanej synchronizacji workflow Pages pobierze gałąź danych i opublikuje nową generację. Commit wykonany przez `GITHUB_TOKEN` nie uruchamia zwykłego workflow `push`, dlatego używamy także `workflow_run`.
 5. Adres projektu: `https://<owner>.github.io/<repository>/`. Build ustawia `base href` na nazwę repozytorium; nawigacja `#/atlas` nie wymaga reguł rewrite.
 

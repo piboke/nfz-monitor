@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   Input,
+  HostListener,
   OnChanges,
   OnDestroy,
   ViewChild,
@@ -51,18 +52,37 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   ngOnDestroy() {
     this.chart?.destroy();
   }
-  private draw() {
+  @HostListener("window:beforeprint")
+  beforePrint() {
+    this.draw(true);
+    this.chart?.resize(650, 220);
+  }
+  @HostListener("window:afterprint")
+  afterPrint() {
+    this.draw();
+    this.chart?.resize();
+  }
+  private draw(printing = false) {
+    const styles = getComputedStyle(document.documentElement);
+    const text = printing
+      ? "#626b76"
+      : styles.getPropertyValue("--muted").trim();
+    const accent = printing
+      ? "#b60500"
+      : styles.getPropertyValue("--red").trim();
     this.chart?.destroy();
     this.chart = new Chart(this.canvas.nativeElement, {
       type: this.type,
       data: {
-        labels: this.labels,
+        labels: this.labels.map((label) =>
+          label.length > 50 ? label.slice(0, 47) + "…" : label,
+        ),
         datasets: [
           {
             label: this.title,
             data: this.values,
-            borderColor: "#b60500",
-            backgroundColor: this.type === "bar" ? "#b60500" : "#e1060018",
+            borderColor: accent,
+            backgroundColor: this.type === "bar" ? accent : accent + "18",
             fill: true,
             tension: 0.15,
             pointRadius: 4,
@@ -72,11 +92,12 @@ export class ChartComponent implements AfterViewInit, OnChanges, OnDestroy {
       },
       options: {
         responsive: true,
+        animation: false,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: this.type === "bar", ticks: { color: "#626b76" } },
-          x: { ticks: { color: "#626b76", maxRotation: 45 } },
+          y: { beginAtZero: this.type === "bar", ticks: { color: text } },
+          x: { ticks: { color: text, maxRotation: 45 } },
         },
       },
     });

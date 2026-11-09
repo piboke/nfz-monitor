@@ -3,7 +3,7 @@ using NfzAtlas.Domain;
 using NfzAtlas.Infrastructure;
 
 var arguments = args.Chunk(2).ToDictionary(a => a[0], a => a.Length == 2 ? a[1] : throw new ArgumentException("Parametry wymagają wartości."));
-var allowed = new[] { "--data", "--work", "--province", "--case", "--benefit", "--fixture", "--measure" };
+var allowed = new[] { "--data", "--work", "--province", "--case", "--benefit", "--fixture", "--measure", "--rebuild-history" };
 if (arguments.Keys.Except(allowed).Any()) throw new ArgumentException("Nieznany parametr. Opcje: " + string.Join(' ', allowed));
 var data = Path.GetFullPath(arguments.GetValueOrDefault("--data", "data"));
 var work = Path.GetFullPath(arguments.GetValueOrDefault("--work", ".etl-work"));
@@ -19,10 +19,16 @@ var benefit = arguments.GetValueOrDefault("--benefit");
 var partitions = provinces.SelectMany(p => cases.Select(c => new Partition(p, c, benefit))).ToArray();
 try
 {
+    if (arguments.GetValueOrDefault("--rebuild-history") == "true")
+    {
+        var count = await ArchiveRecovery.RebuildHistory(data, shutdown.Token);
+        Console.WriteLine($"Odtworzono {count} obserwacji z oryginalnymi datami pobrania. Uruchom pełny ETL, aby ponownie wygenerować projekcje frontendu.");
+        return;
+    }
     var results = new List<(Partition, JsonElement[])>();
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
     http.DefaultRequestHeaders.UserAgent.ParseAdd("NfzAtlas/1.0 (+https://github.com/piboke/nfz-monitor)");
-    using var source = new NfzClient(http, maxConcurrency: 3);
+    using var source = new NfzClient(http, maxConcurrency: 6);
     if (arguments.GetValueOrDefault("--measure") == "true")
     {
         var started = System.Diagnostics.Stopwatch.StartNew();
@@ -49,7 +55,7 @@ try
     else
     {
         var completed = new System.Collections.Concurrent.ConcurrentDictionary<Partition, JsonElement[]>();
-        await Parallel.ForEachAsync(partitions, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = shutdown.Token }, async (partition, ct) =>
+        await Parallel.ForEachAsync(partitions, new ParallelOptions { MaxDegreeOfParallelism = 6, CancellationToken = shutdown.Token }, async (partition, ct) =>
         {
             completed[partition] = await crawler.Download(partition, ct);
         });

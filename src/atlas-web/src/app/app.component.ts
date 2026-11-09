@@ -15,6 +15,7 @@ import {
   Filters,
   HistoryPoint,
   QueueRow,
+  QualityEvent,
   REGIONS,
 } from "./models";
 import { filterRows, median, periodSeries, changes } from "./analytics.mjs";
@@ -53,6 +54,7 @@ export class AppComponent implements OnInit {
   readonly error = signal("");
   readonly rows = signal<QueueRow[]>([]);
   readonly history = signal<HistoryPoint[]>([]);
+  readonly qualityEvents = signal<QualityEvent[]>([]);
   readonly selected = signal<QueueRow[]>([]);
   readonly detailRows = signal<QueueRow[]>([]);
   readonly detailHistory = signal<HistoryPoint[]>([]);
@@ -252,7 +254,39 @@ export class AppComponent implements OnInit {
     return Math.max(1, Math.ceil(this.filtered().length / this.pageSize));
   }
   get reportTitle() {
+    if (this.reportTemplate === 0)
+      return (
+        "Dostępność leczenia: " +
+        (this.filters.province
+          ? REGIONS[this.filters.province]
+          : this.data.manifest()?.national
+            ? "Polska"
+            : "dostępny zakres")
+      );
     return this.templates[this.reportTemplate];
+  }
+  get reportValidation() {
+    return this.reportTemplate === 3 && !this.filters.county
+      ? "Wybierz powiat dla analizy powiatowej."
+      : this.reportTemplate === 4 &&
+          !this.reportProviders.length &&
+          !this.filters.provider
+        ? "Wybierz placówkę, której historię chcesz przeanalizować."
+        : this.from > this.to
+          ? "Popraw kolejność okresów analizy."
+          : "";
+  }
+  get qualityChunks() {
+    const rows = this.filteredEvents;
+    return Array.from({ length: Math.ceil(rows.length / 8) }, (_, i) =>
+      rows.slice(i * 8, i * 8 + 8),
+    );
+  }
+  get filteredEvents() {
+    const allowed = new Set(this.filtered().map((q) => q.id + "|" + q.case));
+    return this.qualityEvents().filter((e) =>
+      allowed.has(e.queueId + "|" + e.category),
+    );
   }
   get groups() {
     const groups = new Map<string, QueueRow[]>();
@@ -443,16 +477,18 @@ export class AppComponent implements OnInit {
         ].flatMap((b) =>
           this.data.shards(b, this.filters.province, this.filters.category),
         ),
-        true,
+        this.view() !== "atlas",
       );
       if (id !== this.requestId) return;
       this.rows.set(result.rows);
       this.history.set(result.history);
+      this.qualityEvents.set(result.events);
       this.configurePeriods();
     } catch (e) {
       if (id === this.requestId) {
         this.rows.set([]);
         this.history.set([]);
+        this.qualityEvents.set([]);
         this.error.set((e as Error).message);
       }
     } finally {

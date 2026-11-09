@@ -411,7 +411,7 @@
         </p>
       </div>
     }
-    @if (filtered().length) {
+    @if (filtered().length && !loading()) {
       @if (view() === "atlas") {
         <div class="results-heading no-print">
           <h2>
@@ -657,12 +657,21 @@
               {{ copied ? "Skopiowano adres" : "Udostępnij konfigurację ↗" }}
             </button>
             @if (view() === "reports") {
-              <button class="button primary" (click)="print()">
+              <button
+                class="button primary"
+                (click)="print()"
+                [disabled]="loading() || !!error() || !!reportValidation"
+              >
                 Pobierz raport PDF ↓
               </button>
             }
           </div>
         </section>
+        @if (view() === "reports" && reportValidation) {
+          <div class="notice no-print" role="status">
+            {{ reportValidation }}
+          </div>
+        }
         <article class="report-document">
           <div class="report-title">
             <p class="eyebrow">ATLAS & RADAR / RAPORT ANALITYCZNY</p>
@@ -766,7 +775,7 @@
               </tbody>
             </table>
           </section>
-          <section class="panel section-space">
+          <section class="panel section-space print-section">
             <h3>Mapa porównawcza województw · {{ metricLabel }}</h3>
             <div class="poland-map report-map">
               <img
@@ -792,8 +801,8 @@
             </div>
             <p class="caption">
               Mapa punktowa: rozmiar znacznika oznacza wartość w województwie.
-              Szary — brak danych. Dane liczbowe i nazwy województw w tabeli
-              poniżej.
+              Szary lub znak „—” — brak danych. Dane liczbowe i nazwy województw
+              w tabeli poniżej.
             </p>
             <table>
               <thead>
@@ -812,7 +821,7 @@
               </tbody>
             </table>
           </section>
-          <section class="panel section-space">
+          <section class="panel section-space print-section">
             <h3>Porównanie obszarów · ostatni stan</h3>
             <app-chart
               [labels]="groupLabels"
@@ -897,7 +906,7 @@
               </div>
             }
           </section>
-          <section class="panel section-space">
+          <section class="panel section-space print-section">
             <h3>Aktualność i braki w danych</h3>
             <div class="table-wrap">
               <table>
@@ -937,6 +946,53 @@
             <p class="caption">
               Anomalia jest sygnałem do weryfikacji. Nie stanowi dowodu
               nieprawidłowości.
+            </p>
+          </section>
+          <section class="panel section-space print-section">
+            <h3>Sygnały jakości danych · ostatnia synchronizacja</h3>
+            @if (!filteredEvents.length) {
+              <p>Brak zarejestrowanych sygnałów w wybranym zakresie.</p>
+            } @else {
+              @for (chunk of qualityChunks; track $index) {
+                <div class="quality-chunk" [class.following]="$index > 0">
+                  @if ($index > 0) {
+                    <h4 class="print-only">
+                      Sygnały jakości danych — ciąg dalszy
+                    </h4>
+                  }
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Placówka / kolejka</th>
+                          <th>Sygnał</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (
+                          event of chunk;
+                          track event.queueId +
+                            "|" +
+                            event.category +
+                            "|" +
+                            event.kind
+                        ) {
+                          <tr>
+                            <td>
+                              {{ queueName(event.queueId, event.category) }}
+                            </td>
+                            <td>{{ event.message }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              }
+            }
+            <p class="caption">
+              Sygnał tekstowego PCUŚ opisuje ograniczenie przeliczenia na dni, a
+              nie błąd placówki. Anomalie wymagają weryfikacji.
             </p>
           </section>
           <section class="method-note">
@@ -1028,8 +1084,12 @@
         </div>
         <p>
           Średni czas wyliczony przez NFZ:
-          {{ number(q.computedAverageDays) }} dni · okres
-          {{ q.computedPeriod ?? "brak" }}. Wiek:
+          {{
+            q.computedAverageDays === null
+              ? "brak danych"
+              : number(q.computedAverageDays) + " dni"
+          }}
+          · okres {{ q.computedPeriod ?? "brak" }}. Wiek:
           {{
             q.forChildren === null
               ? "brak informacji"

@@ -134,3 +134,9 @@ export const EMPTY_FILTERS: Filters = {
   max: "",
   queue: "",
 };
+export interface QualityEvent {
+  queueId: string;
+  kind: string;
+  message: string;
+  category: number;
+}

@@ -3,10 +3,6 @@ on:
   schedule:
     - cron: '17 2 * * *'
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/sync.yml'
 permissions:
   contents: write
 concurrency:
@@ -16,7 +12,7 @@ jobs:
   synchronize:
     runs-on: ubuntu-latest
     timeout-minutes: 330
-    # ETL uses three workers with one global 350ms request pacing gate.
+    # ETL uses six workers with one global 350ms request pacing gate.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +27,8 @@ jobs:
             git fetch origin data
             git worktree add --detach archive FETCH_HEAD
           else
+            status=$?
+            test "$status" -eq 2 || exit "$status"
             git worktree add --detach archive HEAD
             git -C archive switch --orphan data
             mkdir -p archive/data
@@ -48,6 +46,7 @@ jobs:
           git -C archive config user.name 'github-actions[bot]'
           git -C archive config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           rm -f archive/checkpoints/run.lock
+          printf '%s\n' '*.tmp' 'run.lock' '/data.staging/' '/data.backup/' > archive/.gitignore
           git -C archive add -A
           if ! git -C archive diff --cached --quiet; then
             git -C archive commit -m "NFZ: obserwacje i checkpointy $(date -u +%FT%TZ)"

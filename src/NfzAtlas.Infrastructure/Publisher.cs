@@ -12,6 +12,7 @@ public sealed class Publisher(string dataRoot)
     {
         if (national && (partitions.Count != 32 || partitions.Any(p => p.Partition.Benefit is not null) || partitions.Select(p => (p.Partition.Province, p.Partition.Case)).Distinct().Count() != 32))
             throw new InvalidDataException("Zakres krajowy wymaga 32 kompletnych partycji bez filtra świadczenia.");
+        if (national && partitions.Any(p => p.Records.Length == 0)) throw new InvalidDataException("Pusta partycja krajowa wymaga weryfikacji; poprzednia publikacja pozostaje aktywna.");
         var ids = new HashSet<(string, int)>();
         foreach (var (partition, records) in partitions)
             foreach (var raw in records)
@@ -124,13 +125,13 @@ public sealed class Publisher(string dataRoot)
         }
         var bytes = Directory.EnumerateFiles(stage, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length);
         if (bytes > 700L * 1024 * 1024) throw new IOException("Zestawienia przekroczyły budżet 700 MiB GitHub Pages. Publikacja wstrzymana.");
-        if (Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) > 3L * 1024 * 1024 * 1024) throw new IOException("Archiwum przekroczyło 3 GiB. Wymagana rotacja repozytorium archiwalnego.");
+        if (Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) > 900L * 1024 * 1024) throw new IOException("Archiwum przekroczyło 900 MiB. Wymagana rotacja repozytorium archiwalnego.");
         // Manifest is the commit point. Consumers never see a generation without all its files.
         foreach (var write in historyWrites) await JsonFiles.Write(write.Path, write.Data, ct);
         if (sourceChanges.Count > 0) await JsonFiles.Write(Path.Combine(dataRoot, "snapshots", generation + ".json.gz"), sourceChanges, ct);
         foreach (var file in Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories))
             if (new FileInfo(file).Length > 90L * 1024 * 1024) throw new IOException("Plik przekroczył 90 MiB; wymagany dalszy podział archiwum.");
-        if (Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) > 3L * 1024 * 1024 * 1024) throw new IOException("Archiwum przekroczyło 3 GiB.");
+        if (Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) > 900L * 1024 * 1024) throw new IOException("Archiwum przekroczyło 900 MiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
         foreach (var dir in Directory.EnumerateDirectories(Path.Combine(dataRoot, "aggregates")))
             if (Path.GetFileName(dir) != generation) Directory.Delete(dir, true);

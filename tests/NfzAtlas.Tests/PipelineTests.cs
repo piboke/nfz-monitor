@@ -215,6 +215,37 @@ public sealed class PipelineTests : IDisposable
         await Task.WhenAll(Enumerable.Range(0, 7).Select(_ => source.FetchAsync(new("07", 1), 1, default)));
         Assert.Equal(2, max);
     }
+    [Fact]
+    public async Task RebuildsHistoryFromRawArchiveWithOriginalRetrievalDates()
+    {
+        var raw = Fixture().GetProperty("data")[0].Clone();
+        var now = new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero);
+        await new Publisher(root).Publish([(new("07", 1), new[] { raw })], false, now, default);
+        var file = Directory.GetFiles(Path.Combine(root, "history"), "*.gz", SearchOption.AllDirectories).Single();
+        var original = await JsonFiles.Read<Observation[]>(file);
+        Directory.Delete(Path.Combine(root, "history"), true);
+        Assert.Equal(1, await ArchiveRecovery.RebuildHistory(root, default));
+        var recovered = await JsonFiles.Read<Observation[]>(file);
+        Assert.Equal(original![0].Queue, recovered![0].Queue);
+        Assert.Equal(now, recovered[0].RetrievedAt);
+        Assert.Equal(1, await ArchiveRecovery.RebuildHistory(root, default));
+    }
+    [Fact]
+    public async Task EmptyArchiveCannotEraseHistory()
+    {
+        Directory.CreateDirectory(Path.Combine(root, "history"));
+        var preserved = Path.Combine(root, "history", "preserved.txt");
+        await File.WriteAllTextAsync(preserved, "keep");
+        await Assert.ThrowsAsync<InvalidDataException>(() => ArchiveRecovery.RebuildHistory(root, default));
+        Assert.Equal("keep", await File.ReadAllTextAsync(preserved));
+    }
+    [Fact]
+    public async Task EmptyNationalResponseCannotReplacePublishedData()
+    {
+        var partitions = Regions.Names.Keys.SelectMany(p => new[] { 1, 2 }.Select(c => (new Partition(p, c), Array.Empty<JsonElement>()))).ToArray();
+        await Assert.ThrowsAsync<InvalidDataException>(() => new Publisher(root).Publish(partitions, true, DateTimeOffset.UtcNow, default));
+        Assert.False(Directory.Exists(root));
+    }
     public void Dispose() { if (Directory.Exists(root)) Directory.Delete(root, true); }
     private sealed class Handler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler { protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) => Task.FromResult(send(request)); }
     private sealed class AsyncHandler(Func<Task<HttpResponseMessage>> send) : HttpMessageHandler { protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) => send(); }
