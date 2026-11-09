@@ -1,12 +1,111 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {median,filterRows,periodSeries,changes} from '../src/app/analytics.mjs';
-const row={id:'a',case:1,benefitId:'cardio',province:'07',county:'RADOM',locality:'ŁÓDŹ',provider:'Szpital',place:'Oddział',forChildren:null,pcusDays:null};
-const filters={benefit:'',province:'',category:'1',county:'',locality:'',provider:'',age:'',min:'',max:''};
-const point={id:'a',case:1,reportingPeriod:'2026-09',pcusUpdatedAt:'2026-10-01',awaiting:10,removed:5,pcusDays:3,retrievedAt:'2026-10-03T12:00:00Z'};
-test('median excludes missing values, preserves true zero',()=>{assert.equal(median([null,0,2,100]),2);assert.equal(median([null]),null);assert.equal(median([1,3]),2);});
-test('filters compose and do not coerce null PCUS to zero',()=>{assert.equal(filterRows([row],{...filters,locality:'łódź',county:'RADOM'}).length,1);assert.equal(filterRows([row],{...filters,max:'100'}).length,0);assert.equal(filterRows([row],{...filters,age:'adults'}).length,0);assert.equal(filterRows([row],{...filters,category:'2'}).length,0);});
-test('history uses source periods and last revision, never retrieval date',()=>{const points=[point,{...point,awaiting:12,retrievedAt:'2026-10-04T12:00:00Z'},{...point,id:'b',awaiting:null}];assert.deepEqual(periodSeries(points,'awaiting'),[{period:'2026-09',value:12,coverage:1}]);});
-test('PCUS timeline uses source update dates and a median',()=>{assert.deepEqual(periodSeries([point,{...point,id:'b',pcusDays:9}],'pcusDays'),[{period:'2026-10-01',value:6,coverage:2}]);});
-test('comparison includes only common queues and same category',()=>{const next={...point,reportingPeriod:'2026-10',awaiting:20};const data=[point,next,{...next,id:'new',awaiting:100},{...point,case:2,awaiting:99}];assert.deepEqual(changes(data,'awaiting','2026-09','2026-10'),[{id:'a',case:1,delta:10,percent:100}]);});
-test('zero baseline is undefined; date filters use source periods',()=>{assert.equal(changes([{...point,awaiting:0},{...point,reportingPeriod:'2026-10',awaiting:4}],'awaiting','2026-09','2026-10')[0].percent,null);assert.equal(periodSeries([point],'awaiting','2026-10','2026-11').length,0);});
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  median,
+  filterRows,
+  periodSeries,
+  changes,
+} from "../src/app/analytics.mjs";
+const row = {
+  id: "a",
+  case: 1,
+  benefitId: "cardio",
+  province: "07",
+  county: "RADOM",
+  locality: "ŁÓDŹ",
+  provider: "Szpital",
+  place: "Oddział",
+  forChildren: null,
+  pcusDays: null,
+};
+const filters = {
+  benefit: "",
+  province: "",
+  category: "1",
+  county: "",
+  locality: "",
+  provider: "",
+  age: "",
+  min: "",
+  max: "",
+};
+const point = {
+  id: "a",
+  case: 1,
+  reportingPeriod: "2026-09",
+  pcusUpdatedAt: "2026-10-01",
+  awaiting: 10,
+  removed: 5,
+  pcusDays: 3,
+  retrievedAt: "2026-10-03T12:00:00Z",
+};
+test("median excludes missing values, preserves true zero", () => {
+  assert.equal(median([null, 0, 2, 100]), 2);
+  assert.equal(median([null]), null);
+  assert.equal(median([1, 3]), 2);
+});
+test("filters compose and do not coerce null PCUS to zero", () => {
+  assert.equal(
+    filterRows([row], { ...filters, locality: "łódź", county: "RADOM" }).length,
+    1,
+  );
+  assert.equal(filterRows([row], { ...filters, max: "100" }).length, 0);
+  assert.equal(filterRows([row], { ...filters, age: "adults" }).length, 0);
+  assert.equal(filterRows([row], { ...filters, category: "2" }).length, 0);
+});
+test("history uses source periods and last revision, never retrieval date", () => {
+  const points = [
+    point,
+    { ...point, awaiting: 12, retrievedAt: "2026-10-04T12:00:00Z" },
+    { ...point, id: "b", awaiting: null },
+  ];
+  assert.deepEqual(periodSeries(points, "awaiting"), [
+    { period: "2026-09", value: 12, coverage: 1 },
+  ]);
+});
+test("PCUS timeline uses source update dates and a median", () => {
+  assert.deepEqual(
+    periodSeries([point, { ...point, id: "b", pcusDays: 9 }], "pcusDays"),
+    [{ period: "2026-10-01", value: 6, coverage: 2 }],
+  );
+});
+test("comparison includes only common queues and same category", () => {
+  const next = { ...point, reportingPeriod: "2026-10", awaiting: 20 };
+  const data = [
+    point,
+    next,
+    { ...next, id: "new", awaiting: 100 },
+    { ...point, case: 2, awaiting: 99 },
+  ];
+  assert.deepEqual(changes(data, "awaiting", "2026-09", "2026-10"), [
+    { id: "a", case: 1, delta: 10, percent: 100 },
+  ]);
+});
+test("zero baseline is undefined; date filters use source periods", () => {
+  assert.equal(
+    changes(
+      [
+        { ...point, awaiting: 0 },
+        { ...point, reportingPeriod: "2026-10", awaiting: 4 },
+      ],
+      "awaiting",
+      "2026-09",
+      "2026-10",
+    )[0].percent,
+    null,
+  );
+  assert.equal(
+    periodSeries([point], "awaiting", "2026-10", "2026-11").length,
+    0,
+  );
+});
+test("does not compare a queue after changing facility or benefit identity", () => {
+  const base = { ...point, facilityId: "old", benefitId: "cardio" };
+  const next = {
+    ...base,
+    facilityId: "new",
+    reportingPeriod: "2026-10",
+    awaiting: 20,
+  };
+  assert.deepEqual(changes([base, next], "awaiting", "2026-09", "2026-10"), []);
+});

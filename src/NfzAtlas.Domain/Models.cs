@@ -13,7 +13,7 @@ public sealed record QueueRow(
     int? Awaiting, int? Removed, int? AverageDays, int? ComputedAverageDays,
     string? ReportingPeriod, string? ComputedPeriod);
 
-public sealed record Observation(string Fingerprint, DateTimeOffset RetrievedAt, string SchemaVersion, QueueRow Queue);
+public sealed record Observation(string Fingerprint, DateTimeOffset RetrievedAt, string SchemaVersion, QueueRow Queue, string? SourceFingerprint = null);
 public sealed record HistoryPoint(string Id, string FacilityId, string BenefitId, int Case, string Province,
     string? ReportingPeriod, string? PcusUpdatedAt, int? Awaiting, int? Removed, int? PcusDays,
     string? Pcus, DateTimeOffset RetrievedAt);
@@ -26,7 +26,7 @@ public sealed record Shard(string Province, int Case, string BenefitId, string B
     string HistoryPath, int Count, long Bytes);
 public sealed record Manifest(string SchemaVersion, DateTimeOffset? LastSync, bool Complete, bool National,
     string Source, string Scope, string[] Periods, string[] Regions, Shard[] Shards, string[] Warnings,
-    int QueueCount, string Generation);
+    int QueueCount, string Generation, int ProviderCount = 0, int FacilityCount = 0);
 public sealed record Partition(string Province, int Case, string? Benefit = null)
 {
     public string Key => $"{Province}-{Case}-{Identity.Hash(Benefit ?? "*")}";

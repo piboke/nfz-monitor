@@ -143,6 +143,78 @@ public sealed class PipelineTests : IDisposable
         Assert.Single(Directory.GetDirectories(Path.Combine(root, "aggregates")));
     }
     [Fact] public void RejectsIncompletePages() => Assert.Throws<InvalidDataException>(() => NfzClient.Parse(JsonSerializer.SerializeToElement(new { meta = new { page = 1, count = 25, limit = 25 }, links = new { next = (string?)null }, data = new[] { new { id = "x" } } }), 1));
+    [Fact]
+    public async Task DownloadsAllPagesWithStableIds()
+    {
+        var records = Fixture().GetProperty("data").EnumerateArray().Select(r => r.Clone()).ToArray();
+        var final = JsonNode.Parse(records[0].GetRawText())!;
+        final["id"] = Guid.NewGuid().ToString();
+        var source = new FakeSource((_, p) => p == 1 ? new(26, 1, 25, true, records) : new(26, 2, 25, false, [JsonSerializer.SerializeToElement(final)]));
+        var result = await new Crawler(source, root).Download(new("07", 1), default);
+        Assert.Equal(26, result.Length);
+        Assert.Equal(26, result.Select(r => r.GetProperty("id").GetString()).Distinct().Count());
+    }
+    [Fact]
+    public async Task FailedPublicationLeavesPreviousGenerationUntouched()
+    {
+        var raw = Fixture().GetProperty("data")[0].Clone();
+        var publisher = new Publisher(root);
+        var now = new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero);
+        var first = await publisher.Publish([(new("07", 1), new[] { raw })], false, now, default);
+        var broken = JsonNode.Parse(raw.GetRawText())!;
+        broken["id"] = Guid.NewGuid().ToString();
+        broken["attributes"]!["case"] = 2;
+        broken["attributes"]!["statistics"] = "wrong-schema";
+        await Assert.ThrowsAsync<InvalidDataException>(() => publisher.Publish([(new("07", 1), new[] { raw }), (new("07", 2), new[] { JsonSerializer.SerializeToElement(broken) })], false, now.AddDays(1), default));
+        var current = await JsonFiles.Read<Manifest>(Path.Combine(root, "manifest.json"));
+        Assert.Equal(first.Generation, current!.Generation);
+        Assert.True(File.Exists(Path.Combine(root, first.Shards[0].Path)));
+        Assert.Single(Directory.GetFiles(Path.Combine(root, "snapshots")));
+    }
+    [Fact]
+    public async Task RawOnlyChangeIsArchivedWithoutInventingSourcePeriods()
+    {
+        var raw = Fixture().GetProperty("data")[0].Clone();
+        var publisher = new Publisher(root);
+        var now = new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero);
+        await publisher.Publish([(new("07", 1), new[] { raw })], false, now, default);
+        var node = JsonNode.Parse(raw.GetRawText())!;
+        node["attributes"]!["ramp"] = "N";
+        var m = await publisher.Publish([(new("07", 1), new[] { JsonSerializer.SerializeToElement(node) })], false, now.AddDays(1), default);
+        Assert.Equal(2, Directory.GetFiles(Path.Combine(root, "snapshots")).Length);
+        var history = await JsonFiles.Read<HistoryPoint[]>(Path.Combine(root, m.Shards[0].HistoryPath));
+        Assert.Single(history!.Select(p => p.ReportingPeriod).Distinct());
+        Assert.Equal(2, history!.Length);
+    }
+    [Fact]
+    public async Task IncompleteScopeCannotBeLabeledNational()
+    {
+        await Assert.ThrowsAsync<InvalidDataException>(() => new Publisher(root).Publish([(new("07", 1), Fixture().GetProperty("data").EnumerateArray().Select(r => r.Clone()).ToArray())], true, DateTimeOffset.UtcNow, default));
+        Assert.False(File.Exists(Path.Combine(root, "manifest.json")));
+    }
+    [Fact]
+    public void DoesNotCompareChangedFacilityIdentity()
+    {
+        var q = Row() with { ReportingPeriod = "2026-10", Awaiting = 150 };
+        var old = q with { ReportingPeriod = "2026-09", Awaiting = 100, FacilityId = "another-facility" };
+        Assert.Null(Analytics.Summarize("x", [q], [O(old)], new(2026, 11, 9)).AwaitingChange);
+    }
+    [Fact]
+    public async Task ConcurrentClientNeverExceedsConfiguredBound()
+    {
+        var inFlight = 0; var max = 0; var sync = new object();
+        using var http = new HttpClient(new AsyncHandler(async () =>
+        {
+            var current = Interlocked.Increment(ref inFlight);
+            lock (sync) max = Math.Max(max, current);
+            await Task.Delay(20);
+            Interlocked.Decrement(ref inFlight);
+            return new(HttpStatusCode.OK) { Content = new StringContent(Fixture().GetRawText()) };
+        }));
+        using var source = new NfzClient(http, TimeSpan.Zero, (_, _) => Task.CompletedTask, maxConcurrency: 2);
+        await Task.WhenAll(Enumerable.Range(0, 7).Select(_ => source.FetchAsync(new("07", 1), 1, default)));
+        Assert.Equal(2, max);
+    }
     public void Dispose() { if (Directory.Exists(root)) Directory.Delete(root, true); }
     private sealed class Handler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler { protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) => Task.FromResult(send(request)); }
     private sealed class AsyncHandler(Func<Task<HttpResponseMessage>> send) : HttpMessageHandler { protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct) => send(); }

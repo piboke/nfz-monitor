@@ -6,10 +6,11 @@ using NfzAtlas.Domain;
 namespace NfzAtlas.Infrastructure;
 
 public sealed class NfzClient(HttpClient http, TimeSpan? minimumInterval = null,
-    Func<TimeSpan, CancellationToken, Task>? delay = null) : INfzSource, IDisposable
+    Func<TimeSpan, CancellationToken, Task>? delay = null, int maxConcurrency = 1) : INfzSource, IDisposable
 {
     public const string BaseUrl = "https://apinfz.nfz.gov.pl/app-itl-api-pcus/";
-    private readonly SemaphoreSlim gate = new(1, 1);
+    private readonly SemaphoreSlim gate = new(maxConcurrency, maxConcurrency);
+    private readonly SemaphoreSlim throttle = new(1, 1);
     private readonly Func<TimeSpan, CancellationToken, Task> pause = delay ?? Task.Delay;
     private readonly TimeSpan interval = minimumInterval ?? TimeSpan.FromMilliseconds(350);
     public static TimeSpan RetryDelay(HttpResponseMessage response, int attempt, DateTimeOffset now)
@@ -27,7 +28,9 @@ public sealed class NfzClient(HttpClient http, TimeSpan? minimumInterval = null,
             if (partition.Benefit is not null) path += "&benefit=" + Uri.EscapeDataString(partition.Benefit);
             for (var attempt = 0; attempt < 6; attempt++)
             {
-                await pause(interval, cancellationToken);
+                await throttle.WaitAsync(cancellationToken);
+                try { await pause(interval, cancellationToken); }
+                finally { throttle.Release(); }
                 HttpResponseMessage response;
                 try { response = await http.GetAsync(new Uri(new Uri(BaseUrl), path), cancellationToken); }
                 catch (HttpRequestException) when (attempt < 5) { await pause(TimeSpan.FromSeconds(Math.Pow(2, attempt)), cancellationToken); continue; }
@@ -61,5 +64,5 @@ public sealed class NfzClient(HttpClient http, TimeSpan? minimumInterval = null,
         if (records.GetArrayLength() != Math.Min(limit, Math.Max(0, count - (page - 1) * limit))) throw new InvalidDataException("Niekompletna strona NFZ.");
         return new(count, page, limit, hasNext, records.EnumerateArray().Select(r => r.Clone()).ToArray());
     }
-    public void Dispose() => gate.Dispose();
+    public void Dispose() { gate.Dispose(); throttle.Dispose(); }
 }

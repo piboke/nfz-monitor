@@ -3,7 +3,7 @@ using NfzAtlas.Domain;
 using NfzAtlas.Infrastructure;
 
 var arguments = args.Chunk(2).ToDictionary(a => a[0], a => a.Length == 2 ? a[1] : throw new ArgumentException("Parametry wymagają wartości."));
-var allowed = new[] { "--data", "--work", "--province", "--case", "--benefit", "--fixture" };
+var allowed = new[] { "--data", "--work", "--province", "--case", "--benefit", "--fixture", "--measure" };
 if (arguments.Keys.Except(allowed).Any()) throw new ArgumentException("Nieznany parametr. Opcje: " + string.Join(' ', allowed));
 var data = Path.GetFullPath(arguments.GetValueOrDefault("--data", "data"));
 var work = Path.GetFullPath(arguments.GetValueOrDefault("--work", ".etl-work"));
@@ -22,18 +22,38 @@ try
     var results = new List<(Partition, JsonElement[])>();
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
     http.DefaultRequestHeaders.UserAgent.ParseAdd("NfzAtlas/1.0 (+https://github.com/piboke/nfz-monitor)");
-    using var source = new NfzClient(http);
-    var crawler = new Crawler(source, work);
-    foreach (var partition in partitions)
+    using var source = new NfzClient(http, maxConcurrency: 3);
+    if (arguments.GetValueOrDefault("--measure") == "true")
     {
-        if (arguments.TryGetValue("--fixture", out var fixture))
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        var measurements = new List<object>();
+        long queues = 0, pages = 0;
+        foreach (var partition in partitions)
         {
-            using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(fixture, shutdown.Token));
-            // Fixtures are accepted only in separate test outputs and are never marked complete.
-            if (data == Path.GetFullPath("data")) throw new ArgumentException("Fixture nie może zostać opublikowany do produkcyjnego data/.");
-            results.Add((partition, doc.RootElement.GetProperty("data").EnumerateArray().Select(r => r.Clone()).ToArray()));
+            var first = await source.FetchAsync(partition, 1, shutdown.Token);
+            queues += first.Count;
+            var count = Math.Max(1, (first.Count + 24) / 25);
+            pages += count;
+            measurements.Add(new { partition.Province, partition.Case, queues = first.Count, pages = count });
         }
-        else results.Add((partition, await crawler.Download(partition, shutdown.Token)));
+        Console.WriteLine(JsonSerializer.Serialize(new { measuredAt = DateTimeOffset.UtcNow, partitions = measurements, queues, pages, minimumThrottleSeconds = pages * 0.35, measurementSeconds = started.Elapsed.TotalSeconds }, JsonFiles.Options));
+        return;
+    }
+    var crawler = new Crawler(source, work);
+    if (arguments.TryGetValue("--fixture", out var fixture))
+    {
+        if (data == Path.GetFullPath("data")) throw new ArgumentException("Fixture nie może zostać opublikowany do produkcyjnego data/.");
+        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(fixture, shutdown.Token));
+        foreach (var partition in partitions) results.Add((partition, doc.RootElement.GetProperty("data").EnumerateArray().Select(r => r.Clone()).ToArray()));
+    }
+    else
+    {
+        var completed = new System.Collections.Concurrent.ConcurrentDictionary<Partition, JsonElement[]>();
+        await Parallel.ForEachAsync(partitions, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = shutdown.Token }, async (partition, ct) =>
+        {
+            completed[partition] = await crawler.Download(partition, ct);
+        });
+        foreach (var partition in partitions) results.Add((partition, completed[partition]));
     }
     var national = provinces.Distinct().Count() == 16 && cases.Distinct().Count() == 2 && benefit is null && !arguments.ContainsKey("--fixture");
     var manifest = await new Publisher(data).Publish(results, national, DateTimeOffset.UtcNow, shutdown.Token);

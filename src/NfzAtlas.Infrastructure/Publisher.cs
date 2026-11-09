@@ -49,6 +49,15 @@ public sealed class Publisher(string dataRoot)
         }
         finally { if (Directory.Exists(staging)) Directory.Delete(staging, true); }
     }
+    private static string CanonicalJson(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.Object => "{" + string.Join(",", element.EnumerateObject().OrderBy(p => p.Name, StringComparer.Ordinal).Select(p => JsonSerializer.Serialize(p.Name) + ":" + CanonicalJson(p.Value))) + "}",
+            JsonValueKind.Array => "[" + string.Join(",", element.EnumerateArray().Select(CanonicalJson)) + "]",
+            _ => element.GetRawText()
+        };
+    }
     private async Task<Manifest> PublishCore(IReadOnlyList<(Partition Partition, JsonElement[] Records)> partitions, bool national, DateTimeOffset now, CancellationToken ct)
     {
         var previousManifest = await JsonFiles.Read<Manifest>(Path.Combine(dataRoot, "manifest.json"), ct);
@@ -72,10 +81,11 @@ public sealed class Publisher(string dataRoot)
                 foreach (var item in group)
                 {
                     var fingerprint = Identity.Hash(JsonSerializer.Serialize(item.Row, JsonFiles.Options));
-                    if (!latest.TryGetValue(item.Row.Id, out var prior) || prior.Fingerprint != fingerprint)
+                    var sourceFingerprint = Identity.Hash(CanonicalJson(item.Raw));
+                    if (!latest.TryGetValue(item.Row.Id, out var prior) || prior.Fingerprint != fingerprint || prior.SourceFingerprint != sourceFingerprint)
                     {
-                        history.Add(new(fingerprint, now, SchemaVersion, item.Row));
-                        sourceChanges.Add(new(item.Row.Id, item.Row.Case, item.Row.Province, fingerprint, now, SchemaVersion, item.Raw));
+                        history.Add(new(fingerprint, now, SchemaVersion, item.Row, sourceFingerprint));
+                        sourceChanges.Add(new(item.Row.Id, item.Row.Case, item.Row.Province, sourceFingerprint, now, SchemaVersion, item.Raw));
                     }
                 }
                 historyWrites.Add((historyPath, history.ToArray()));
@@ -95,11 +105,17 @@ public sealed class Publisher(string dataRoot)
         var coverage = previousManifest?.Shards.Sum(s => s.Count);
         var warnings = new List<string>();
         if (!national) warnings.Add("Zakres ograniczony: wyniki nie opisują całej Polski.");
-        if (coverage is > 0 && coverage != allRows.Count) warnings.Add($"Zmiana liczby raportujących kolejek: {coverage} → {allRows.Count}. Porównania wyłącznie na wspólnych kolejkach.");
+        if (previousManifest?.National == national && coverage is > 0 && coverage != allRows.Count) warnings.Add($"Zmiana liczby raportujących kolejek: {coverage} → {allRows.Count}. Porównania wyłącznie na wspólnych kolejkach.");
+        var providerCount = allRows.Select(q => (q.Province, q.ProviderCode)).Distinct().Count();
+        var facilityCount = allRows.Select(q => q.FacilityId).Distinct().Count();
+        if (previousManifest?.National == national && previousManifest.ProviderCount > 0 && previousManifest.ProviderCount != providerCount)
+            warnings.Add($"Zmiana liczby raportujących świadczeniodawców NFZ: {previousManifest.ProviderCount} → {providerCount}. Wymaga weryfikacji pokrycia.");
+        if (previousManifest is not null && previousManifest.National != national)
+            warnings.Add("Zmieniono zakres zbioru. Sumy z poprzedniego zakresu nie są porównywalne z bieżącymi.");
         var summary = new { total = Analytics.Summarize("scope", allRows, allHistory, DateOnly.FromDateTime(now.UtcDateTime)), regions = allRows.GroupBy(q => q.Province).Select(g => Analytics.Summarize(g.Key, g.ToArray(), allHistory.Where(o => o.Queue.Province == g.Key).ToArray(), DateOnly.FromDateTime(now.UtcDateTime))), shards = summaries, qualityCounts = quality.GroupBy(q => q.Kind).ToDictionary(g => g.Key, g => g.Count()) };
         await JsonFiles.Write(Path.Combine(stage, "summary.json"), summary, ct);
         var periods = allHistory.Select(o => o.Queue.ReportingPeriod).OfType<string>().Distinct().Order().ToArray();
-        var manifest = new Manifest(SchemaVersion, now, true, national, NfzClient.BaseUrl, national ? "Polska · wszystkie województwa · obie kategorie" : string.Join(", ", partitions.Select(p => $"{Regions.Names[p.Partition.Province]} / kategoria {p.Partition.Case} / {p.Partition.Benefit ?? "wszystkie świadczenia"}")), periods, partitions.Select(p => p.Partition.Province).Distinct().Order().ToArray(), shards.OrderBy(s => s.Province).ThenBy(s => s.Benefit).ThenBy(s => s.Case).ToArray(), warnings.ToArray(), allRows.Count, generation);
+        var manifest = new Manifest(SchemaVersion, now, true, national, NfzClient.BaseUrl, national ? "Polska · wszystkie województwa · obie kategorie" : string.Join(", ", partitions.Select(p => $"{Regions.Names[p.Partition.Province]} / kategoria {p.Partition.Case} / {p.Partition.Benefit ?? "wszystkie świadczenia"}")), periods, partitions.Select(p => p.Partition.Province).Distinct().Order().ToArray(), shards.OrderBy(s => s.Province).ThenBy(s => s.Benefit).ThenBy(s => s.Case).ToArray(), warnings.ToArray(), allRows.Count, generation, providerCount, facilityCount);
         var historyByProvider = allHistory.GroupBy(o => (o.Queue.Province, o.Queue.ProviderCode)).ToDictionary(g => g.Key, g => Analytics.Series(g));
         foreach (var provider in allRows.GroupBy(q => (q.Province, q.ProviderCode)))
         {
@@ -112,6 +128,9 @@ public sealed class Publisher(string dataRoot)
         // Manifest is the commit point. Consumers never see a generation without all its files.
         foreach (var write in historyWrites) await JsonFiles.Write(write.Path, write.Data, ct);
         if (sourceChanges.Count > 0) await JsonFiles.Write(Path.Combine(dataRoot, "snapshots", generation + ".json.gz"), sourceChanges, ct);
+        foreach (var file in Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories))
+            if (new FileInfo(file).Length > 90L * 1024 * 1024) throw new IOException("Plik przekroczył 90 MiB; wymagany dalszy podział archiwum.");
+        if (Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) > 3L * 1024 * 1024 * 1024) throw new IOException("Archiwum przekroczyło 3 GiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
         foreach (var dir in Directory.EnumerateDirectories(Path.Combine(dataRoot, "aggregates")))
             if (Path.GetFileName(dir) != generation) Directory.Delete(dir, true);

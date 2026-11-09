@@ -40,7 +40,11 @@ public static partial class Normalization
     }
     private static int? Nonnegative(JsonElement e, string key) { var n = Number(e, key); return n < 0 ? throw new InvalidDataException($"Ujemne {key}.") : n; }
     public static JsonElement Required(JsonElement e, string key, JsonValueKind kind) => e.TryGetProperty(key, out var v) && v.ValueKind == kind ? v : throw new InvalidDataException($"Zmiana schematu: {key}.");
-    private static JsonElement Object(JsonElement e, string key) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Object ? v : default;
+    private static JsonElement Object(JsonElement e, string key)
+    {
+        if (e.ValueKind != JsonValueKind.Object || !e.TryGetProperty(key, out var value) || value.ValueKind == JsonValueKind.Null) return default;
+        return value.ValueKind == JsonValueKind.Object ? value : throw new InvalidDataException($"Zmiana typu obiektu {key}.");
+    }
     private static string String(JsonElement e, string key) => NullableString(e, key) ?? "";
     private static string? NullableString(JsonElement e, string key) => e.ValueKind != JsonValueKind.Object || !e.TryGetProperty(key, out var v) || v.ValueKind == JsonValueKind.Null ? null : v.ValueKind == JsonValueKind.String ? v.GetString() : throw new InvalidDataException($"Zmiana typu {key}.");
     private static int? Number(JsonElement e, string key) => e.ValueKind != JsonValueKind.Object || !e.TryGetProperty(key, out var v) || v.ValueKind == JsonValueKind.Null ? null : v.GetInt32();

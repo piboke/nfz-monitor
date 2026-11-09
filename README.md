@@ -27,6 +27,9 @@ dotnet format NfzAtlas.sln --verify-no-changes
 ## Dane i synchronizacja
 
 ```sh
+# Pomiar wolumenu bez zapisu danych (32 pierwsze strony)
+dotnet run --project src/NfzAtlas.ETL -- --measure true
+
 # Pełny kraj: 16 województw × 2 kategorie, wszystkie świadczenia
 dotnet run --project src/NfzAtlas.ETL --configuration Release
 
