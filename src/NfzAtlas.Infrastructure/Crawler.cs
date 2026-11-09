@@ -36,7 +36,19 @@ public sealed class Crawler(INfzSource source, string checkpointRoot)
         var result = new List<JsonElement>();
         for (var page = 1; page < state.NextPage; page++)
         {
-            var stored = await JsonFiles.Read<PageResult>(Path.Combine(dir, $"{page}.json.gz"), ct) ?? throw new InvalidDataException("Brak strony checkpointu.");
+            var path = Path.Combine(dir, $"{page}.json.gz");
+            var stored = await JsonFiles.Read<PageResult>(path, ct);
+            if (stored is null)
+            {
+                Console.WriteLine($"{partition.Province}/{partition.Case}: odtwarzanie brakującej strony {page} checkpointu");
+                stored = page == 1 ? first : await source.FetchAsync(partition, page, ct);
+                if (stored.Count != state.Expected || stored.Page != page)
+                    throw new InvalidDataException("Zmiana źródła podczas odtwarzania checkpointu; nie publikujemy niepełnych danych.");
+                foreach (var record in stored.Records) Normalization.Map(record, partition);
+                await JsonFiles.Write(path, stored, ct);
+            }
+            if (stored.Count != state.Expected || stored.Page != page)
+                throw new InvalidDataException($"Sprzeczne metadane checkpointu strony {page}.");
             result.AddRange(stored.Records);
         }
         var ids = new HashSet<string>();

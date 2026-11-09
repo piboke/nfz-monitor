@@ -154,6 +154,32 @@ public sealed class PipelineTests : IDisposable
         Assert.Equal(26, result.Length);
         Assert.Equal(26, result.Select(r => r.GetProperty("id").GetString()).Distinct().Count());
     }
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task RepairsMissingPageFromPersistedCompletedCheckpoint(int missingPage)
+    {
+        var partition = new Partition("07", 1);
+        var records = Fixture().GetProperty("data").EnumerateArray().Select(r => r.Clone()).ToArray();
+        var final = JsonNode.Parse(records[0].GetRawText())!;
+        final["id"] = Guid.NewGuid().ToString();
+        var calls = new List<int>();
+        var source = new FakeSource((_, page) =>
+        {
+            calls.Add(page);
+            return page == 1 ? new(26, 1, 25, true, records) : new(26, 2, 25, false, [JsonSerializer.SerializeToElement(final)]);
+        });
+        var crawler = new Crawler(source, root);
+        await crawler.Download(partition, default);
+        var path = Path.Combine(root, partition.Key, $"{missingPage}.json.gz");
+        File.Delete(path);
+        calls.Clear();
+        var result = await crawler.Download(partition, default);
+        Assert.Equal(26, result.Length);
+        Assert.True(File.Exists(path));
+        Assert.Equal(missingPage == 2 ? 1 : 0, calls.Count(page => page == 2));
+        Assert.Equal(2, calls.Count(page => page == 1));
+    }
     [Fact]
     public async Task FailedPublicationLeavesPreviousGenerationUntouched()
     {
