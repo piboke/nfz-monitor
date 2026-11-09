@@ -1,0 +1,4 @@
+*.tmp
+run.lock
+/data.staging/
+/data.backup/
