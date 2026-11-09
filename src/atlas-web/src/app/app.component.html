@@ -480,6 +480,7 @@
                       q.provider
                     }}</a
                     ><small>{{ q.place }}</small>
+                    <app-contact [row]="q" [compact]="true" />
                   </td>
                   <td>
                     {{ q.locality }}<small>{{ q.county }}</small>
@@ -1059,10 +1060,12 @@
           Kod świadczeniodawcy NFZ: {{ q.providerCode }} · identyfikator
           miejsca: {{ q.facilityId }}
         </p>
-        <p>
-          Kontakt: {{ q.phone ?? "brak telefonu" }} ·
-          {{ q.email ?? "brak e-mail" }} · {{ q.website ?? "brak witryny" }}
-        </p>
+        <app-contact [row]="q" />
+        @if (q.email || q.website) {
+          <p class="caption">
+            {{ q.email }}{{ q.email && q.website ? " · " : "" }}{{ q.website }}
+          </p>
+        }
         <div class="mini-stats">
           <div>
             <strong>{{ q.pcus ?? "brak danych" }}</strong
@@ -1077,30 +1080,51 @@
           </div>
           <div>
             <strong>{{ number(q.removed) }}</strong
-            ><span>skreśleni po świadczeniu · {{ q.reportingPeriod }}</span>
+            ><span
+              >skreśleni po świadczeniu ·
+              {{ q.reportingPeriod ?? "brak okresu" }}</span
+            >
           </div>
           <div>
-            <strong>{{ number(q.averageDays) }}</strong
-            ><span>dni średnio · statystyka świadczeniodawcy</span>
+            <strong>{{
+              q.averageDays === null
+                ? "brak danych"
+                : number(q.averageDays) + " dni"
+            }}</strong
+            ><span>średni czas · dane placówki</span>
           </div>
         </div>
-        <p>
-          Średni czas wyliczony przez NFZ:
-          {{
-            q.computedAverageDays === null
-              ? "brak danych"
-              : number(q.computedAverageDays) + " dni"
-          }}
-          · okres {{ q.computedPeriod ?? "brak" }}. Wiek:
-          {{
-            q.forChildren === null
-              ? "brak informacji"
-              : q.forChildren
-                ? "świadczenia dla dzieci"
-                : "NFZ: brak świadczeń dla dzieci"
-          }}
-          · zakres {{ q.ageRange ?? "niepodany" }}.
-        </p>
+        <dl class="facility-facts">
+          <div>
+            <dt>Średni czas oczekiwania wyliczony przez NFZ</dt>
+            <dd>
+              @if (q.computedAverageDays !== null) {
+                {{ number(q.computedAverageDays) }} dni
+                @if (q.computedPeriod) {
+                  <small>Okres danych: {{ q.computedPeriod }}</small>
+                }
+              } @else {
+                NFZ nie podał wyliczenia.
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Zakres wieku pacjentów</dt>
+            <dd>{{ ageRangeLabel(q.ageRange) }}</dd>
+          </div>
+          <div>
+            <dt>Świadczenia dla dzieci</dt>
+            <dd>
+              {{
+                q.forChildren === null
+                  ? "NFZ nie podał informacji."
+                  : q.forChildren
+                    ? "Tak, według danych NFZ."
+                    : "Nie, według danych NFZ."
+              }}
+            </dd>
+          </div>
+        </dl>
       </section>
       <section class="panel section-space">
         <h2>Świadczenia w dostępnym zbiorze</h2>

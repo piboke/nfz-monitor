@@ -70,6 +70,7 @@ NFZ_DATA_DIR=.etl-local/data npm start --prefix src/atlas-web
 - Radar: obserwacje, rewizje źródłowych okresów, porównania na wspólnych kolejkach, aktualność i sygnały dużych zmian.
 - Raporty: siedem konfiguracji, wykresy liniowe i słupkowe, tabela zmian procentowych, grupowanie oraz konfiguracja w URL.
 - **Pobierz raport PDF** generuje i pobiera dokument A4 bezpośrednio w przeglądarce przez pdfmake. Lokalne fonty Roboto zapewniają polskie znaki. Dokument ma wykresy, mapę wektorową, powtarzane nagłówki tabel, numerację stron, źródła i metodologię. Generator i fonty są ładowane dopiero po wybraniu eksportu. Żadne dane nie są wysyłane do usługi generowania PDF.
+- Widoczne „Zadzwoń” oraz „Odwołaj wizytę” rozwijające numer kontaktowy NFZ na liście i w szczegółach. Numer nie jest przedstawiany jako dedykowana infolinia do odwołań.
 - Jasny i ciemny motyw, tabele alternatywne dla wykresów, etykiety formularzy, obsługa klawiatury i responsywny układ.
 
 ## Historia, odtwarzanie i ograniczenia
@@ -92,7 +93,7 @@ Budżety: 700 MiB na zestawienia jednej publikacji, 900 MiB na aktywne pliki arc
 
 ## Weryfikacja i zasoby
 
-Testy działają offline: 32 testy xUnit i 8 testów analityki JavaScript. Build, TypeScript, formatowanie i CI są sprawdzane automatycznie. Ręcznie sprawdzono Safari, układ 375 × 667 px, filtry, porównanie, szczegóły placówki, mapę, motywy oraz pobieranie PDF z Pages. Czterostronicowy raport A4 sprawdzono wizualnie po renderowaniu przez PDFKit.
+Testy działają offline: 32 testy xUnit i 12 testów analityki i prezentacji JavaScript. Build, TypeScript, formatowanie i CI są sprawdzane automatycznie. Ręcznie sprawdzono Safari, układ 375 × 667 px, filtry, porównanie, szczegóły placówki, mapę, motywy oraz pobieranie PDF z Pages. Czterostronicowy raport A4 sprawdzono wizualnie po renderowaniu przez PDFKit.
 
 `npm audit --omit=dev`: 0 znanych podatności podczas ostatniej kontroli. Pełny audyt narzędzi builda zgłasza umiarkowane ostrzeżenia dotyczące `glob`; narzędzia te nie są publikowane w witrynie. Nie stosuj bez weryfikacji `npm audit fix --force`, który proponuje obniżenie Angulara.
 

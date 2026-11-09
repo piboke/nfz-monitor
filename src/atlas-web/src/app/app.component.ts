@@ -8,6 +8,8 @@ import {
   ViewChildren,
   QueryList,
 } from "@angular/core";
+import { ContactComponent } from "./contact.component";
+import { ageRangeLabel } from "./contact.mjs";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { DataService } from "./data.service";
@@ -28,10 +30,17 @@ import { downloadReport, type PdfReport } from "./report-pdf";
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [CommonModule, FormsModule, ChartComponent, MapComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ChartComponent,
+    MapComponent,
+    ContactComponent,
+  ],
   templateUrl: "./app.component.html",
 })
 export class AppComponent implements OnInit {
+  readonly ageRangeLabel = ageRangeLabel;
   @ViewChildren(ChartComponent) charts!: QueryList<ChartComponent>;
   readonly exporting = signal(false);
   readonly data = inject(DataService);
