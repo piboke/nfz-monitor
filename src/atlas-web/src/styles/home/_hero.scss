@@ -1,0 +1,38 @@
+.hero {
+  display: grid;
+  grid-template-columns: 1.12fr 1fr;
+  gap: 70px;
+  align-items: center;
+  padding: 64px 0;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hero h1 {
+  font-size: clamp(50px, 6vw, 82px);
+  letter-spacing: -0.06em;
+  line-height: 1.02;
+  margin: 23px 0;
+}
+.hero h1 span {
+  color: var(--accent);
+}
+.lead {
+  font-size: 22px;
+  line-height: 1.45;
+  font-weight: 550;
+  letter-spacing: -0.025em;
+}
+.muted {
+  color: var(--muted);
+}
+.hero-description {
+  max-width: 450px;
+  font-size: 14px;
+  line-height: 1.85;
+  margin-top: 18px;
+}

@@ -6,11 +6,12 @@
     "start": "ng serve --host 127.0.0.1",
     "build": "ng build",
     "check": "tsc --noEmit -p tsconfig.app.json",
-    "test": "node --test tests/*.test.mjs",
+    "test": "tsc -p tsconfig.unit.json && node --test .test-build/tests/*.test.mjs",
     "prebuild": "node ../../scripts/prepare-web-data.mjs",
     "prestart": "node ../../scripts/prepare-web-data.mjs",
     "format": "prettier --write src tests *.json ../../scripts/*.mjs",
-    "format:check": "prettier --check src tests *.json ../../scripts/*.mjs"
+    "format:check": "prettier --check src tests *.json ../../scripts/*.mjs",
+    "architecture:check": "node ../../scripts/check-architecture.mjs"
   },
   "dependencies": {
     "@angular/common": "^21.0.0",

@@ -1,0 +1,180 @@
+.results-heading {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 25px 0 20px;
+}
+.results-heading h2 {
+  font-size: 22px;
+  margin-right: auto;
+}
+.results-heading h2 small {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.segmented {
+  display: flex;
+  border: 1px solid var(--line);
+}
+.segmented button {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  padding: 10px 17px;
+  font-size: 12px;
+  min-height: 42px;
+}
+.segmented button.selected {
+  background: var(--ink);
+  color: var(--white);
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+th {
+  background: var(--paper);
+  font-weight: 650;
+  font-size: 10px;
+  letter-spacing: 0.025em;
+  padding: 15px 13px;
+  vertical-align: bottom;
+}
+td {
+  padding: 17px 13px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+  line-height: 1.6;
+}
+thead button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+  min-height: 26px;
+}
+td small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+td.pcus {
+  font-size: 16px;
+  font-weight: 650;
+  min-width: 125px;
+}
+.facility-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--ink);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.facility-link:hover {
+  color: var(--red);
+}
+.stale {
+  color: var(--red) !important;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 11px;
+  padding: 18px 0;
+}
+.pagination > span {
+  margin-right: auto;
+}
+.pagination label {
+  flex-direction: row;
+  align-items: center;
+}
+.pagination select {
+  width: 70px;
+  min-height: 36px;
+  padding: 5px;
+}
+.pagination button,
+td > button:not(.facility-link) {
+  border: 1px solid var(--line);
+  padding: 8px 13px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 11px;
+  min-height: 38px;
+}
+.empty {
+  text-align: center;
+  padding: 55px 25px;
+  margin: 28px 0;
+}
+.empty p {
+  margin-top: 15px;
+  color: var(--muted);
+}
+.loading {
+  padding: 25px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--paper);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+.map {
+  height: 450px;
+  width: 100%;
+  z-index: 0;
+  background: var(--paper);
+}
+.nfz-marker span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #b60500;
+  box-shadow: 0 0 0 1px #222b36;
+}
+.caption {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: 12px 0;
+}
+.chart-frame {
+  height: 260px;
+  position: relative;
+  margin-top: 15px;
+}
+details {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 16px;
+}
+summary {
+  cursor: pointer;
+  min-height: 28px;
+}

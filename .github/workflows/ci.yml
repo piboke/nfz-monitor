@@ -24,12 +24,15 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: src/atlas-web/package-lock.json
+      - run: dotnet tool restore
+      - run: dotnet csharpier check src tests
       - run: dotnet restore NfzAtlas.sln
       - run: dotnet build NfzAtlas.sln --no-restore --configuration Release
       - run: dotnet test NfzAtlas.sln --no-build --configuration Release --logger 'trx;LogFileName=results.trx'
       - run: dotnet format NfzAtlas.sln --verify-no-changes --no-restore
       - run: npm ci --prefix src/atlas-web
       - run: npm run format:check --prefix src/atlas-web
+      - run: npm run architecture:check --prefix src/atlas-web
       - run: npm run check --prefix src/atlas-web
       - run: npm test --prefix src/atlas-web
       - run: npm run build --prefix src/atlas-web -- --base-href '/${{ github.event.repository.name }}/'

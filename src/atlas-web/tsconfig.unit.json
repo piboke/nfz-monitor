@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": ".test-build",
+    "rootDir": ".",
+    "allowJs": true,
+    "checkJs": false,
+    "importHelpers": false
+  },
+  "include": [
+    "tests/**/*.mjs",
+    "src/app/core/models/**/*.ts",
+    "src/app/core/analytics/**/*.ts",
+    "src/app/core/data/provider-file-key.ts",
+    "src/app/core/routing/explorer-query.ts",
+    "src/app/core/data/latest-request.ts",
+    "src/app/shared/formatting/**/*.ts"
+  ]
+}

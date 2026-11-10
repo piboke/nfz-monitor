@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ageRangeLabel, phoneContacts } from "../src/app/contact.mjs";
+import {
+  ageRangeLabel,
+  phoneContacts,
+} from "../src/app/shared/formatting/contact.js";
 
 test("age ranges have readable separators without interpreting missing ages", () => {
   assert.equal(

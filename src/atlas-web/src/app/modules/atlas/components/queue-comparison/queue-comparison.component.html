@@ -1,0 +1,44 @@
+@if (comparison.selected().length) {
+  <section class="panel section-space">
+    <div class="panel-heading">
+      <h2>Wybrane kolejki: {{ comparison.selected().length }}</h2>
+      <button class="text-button" (click)="comparison.clear()">
+        Wyczyść wybór
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Placówka</th>
+            <th>Świadczenie / kategoria</th>
+            <th>PCUŚ</th>
+            <th>Wpisy oczekujących</th>
+            <th>Okres / data PCUŚ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (q of comparison.selected(); track q.id + "|" + q.case) {
+            <tr>
+              <td>{{ q.provider }} · {{ q.locality }}</td>
+              <td>
+                {{ q.benefit }} ·
+                {{ q.case === 1 ? "stabilny" : "pilny" }}
+              </td>
+              <td>{{ q.pcus ?? "brak danych" }}</td>
+              <td>{{ number(q.awaiting) }}</td>
+              <td>
+                {{ q.reportingPeriod ?? "brak" }} /
+                {{ q.pcusUpdatedAt ?? "brak" }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">
+      Porównuj te same świadczenia, kategorie i okresy. Długość kolejki nie
+      mierzy jakości leczenia.
+    </p>
+  </section>
+}

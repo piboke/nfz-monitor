@@ -1,0 +1,22 @@
+<div class="chart-frame">
+  <canvas #canvas role="img" [attr.aria-label]="title"></canvas>
+</div>
+<details>
+  <summary>Dane wykresu w tabeli</summary>
+  <table>
+    <thead>
+      <tr>
+        <th>Okres / obszar</th>
+        <th>{{ title }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (label of labels; track $index) {
+        <tr>
+          <td>{{ label }}</td>
+          <td>{{ values[$index] ?? "brak danych" }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</details>

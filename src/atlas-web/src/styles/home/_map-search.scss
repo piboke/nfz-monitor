@@ -1,0 +1,94 @@
+.hero .button {
+  margin-top: 25px;
+  min-width: 200px;
+  justify-content: space-between;
+}
+.hero .button span {
+  font-size: 20px;
+}
+.hero-art {
+  min-height: 430px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(#71809613 1px, transparent 1px),
+    linear-gradient(90deg, #71809613 1px, transparent 1px);
+  background-size: 28px 28px;
+  padding: 20px;
+  position: relative;
+}
+.hero-art:before,
+.hero-art:after {
+  content: "";
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+}
+.hero-art:before {
+  top: 0;
+  left: 0;
+  border-left: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+}
+.hero-art:after {
+  right: 0;
+  bottom: 0;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+.art-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--muted);
+}
+.poland-map {
+  position: relative;
+  max-width: 390px;
+  align-self: center;
+  width: 100%;
+  margin: 5px 0;
+}
+.poland-map img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.region-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  color: #fff;
+  font-size: 9px;
+  font-family: ui-monospace, monospace;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.region-dot:hover {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+.quick-search {
+  background: var(--paper);
+  border-top: 3px solid var(--ink);
+  display: flex;
+  align-items: end;
+  gap: 22px;
+  padding: 27px;
+}
+.quick-search h2 {
+  font-size: 23px;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+.grow {
+  flex: 1;
+}

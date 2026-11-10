@@ -1,1 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/><PackageReference Include="xunit" Version="2.9.3"/><PackageReference Include="xunit.runner.visualstudio" Version="3.1.1"><PrivateAssets>all</PrivateAssets></PackageReference><ProjectReference Include="../../src/NfzAtlas.Infrastructure/NfzAtlas.Infrastructure.csproj"/><None Include="../fixtures/**" CopyToOutputDirectory="PreserveNewest" Link="fixtures/%(RecursiveDir)%(Filename)%(Extension)"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <IsTestProject>true</IsTestProject>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <ProjectReference Include="../../src/NfzAtlas.Infrastructure/NfzAtlas.Infrastructure.csproj" />
+        <ProjectReference Include="../../src/NfzAtlas.ETL/NfzAtlas.ETL.csproj" />
+        <None
+            Include="../fixtures/**"
+            CopyToOutputDirectory="PreserveNewest"
+            Link="fixtures/%(RecursiveDir)%(Filename)%(Extension)"
+        />
+    </ItemGroup>
+</Project>

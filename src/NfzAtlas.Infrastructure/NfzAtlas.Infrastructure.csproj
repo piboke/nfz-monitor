@@ -1,1 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../NfzAtlas.Application/NfzAtlas.Application.csproj" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <ProjectReference Include="../NfzAtlas.Application/NfzAtlas.Application.csproj" />
+    </ItemGroup>
+</Project>

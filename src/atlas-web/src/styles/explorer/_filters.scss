@@ -1,0 +1,37 @@
+.filters {
+  background: var(--paper);
+  padding: 23px;
+  border-top: 3px solid var(--ink);
+  margin-bottom: 28px;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 17px;
+}
+.wide {
+  grid-column: span 2;
+}
+.filter-footer {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+}
+.filter-footer > span {
+  margin-right: auto;
+  max-width: 450px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.text-button {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: var(--ink);
+  padding: 8px;
+  font-size: 12px;
+}

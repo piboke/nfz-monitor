@@ -1,0 +1,47 @@
+.report-title {
+  border-bottom: 2px solid var(--ink);
+  padding: 25px 0;
+}
+.report-title h2 {
+  font-size: 35px;
+  margin: 15px 0;
+}
+.report-title > p:not(.eyebrow) {
+  margin-top: 12px;
+}
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  margin: 25px 0;
+}
+.mini-stats > div {
+  border-left: 2px solid var(--line);
+  padding-left: 17px;
+}
+.mini-stats strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.mini-stats span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.method-note {
+  font-size: 11px;
+  line-height: 1.8;
+  background: var(--paper);
+  padding: 25px;
+  margin-top: 28px;
+}
+.method-note h3 {
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+.method-note p + p {
+  margin-top: 12px;
+}

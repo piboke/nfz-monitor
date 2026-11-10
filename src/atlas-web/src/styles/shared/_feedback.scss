@@ -1,0 +1,47 @@
+.notice {
+  padding: 15px 18px;
+  background: var(--paper);
+  border-left: 3px solid var(--red);
+  font-size: 12px;
+  margin: 18px 0;
+  color: var(--ink);
+}
+.notice.error {
+  background: var(--soft-red);
+}
+.notice.scope {
+  margin-bottom: 0;
+}
+.notice button {
+  margin-left: 10px;
+}
+.page-heading {
+  padding: 45px 0 30px;
+}
+.page-heading .eyebrow {
+  margin-bottom: 18px;
+}
+.page-heading h1 {
+  margin-bottom: 18px;
+}
+.page-heading > p:last-child {
+  max-width: 700px;
+}
+.page-heading > a {
+  display: inline-block;
+  margin-bottom: 25px;
+  font-size: 12px;
+}
+
+.bootstrap-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--ink);
+}
+.bootstrap-loading span {
+  color: var(--muted);
+}

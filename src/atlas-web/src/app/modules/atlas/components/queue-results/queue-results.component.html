@@ -1,0 +1,127 @@
+<div class="results-heading no-print">
+  <h2>
+    Kolejki: {{ number(workspace.filtered().length) }}
+    <small>w wybranym zakresie</small>
+  </h2>
+  <div class="segmented">
+    <button
+      [class.selected]="workspace.display === 'list'"
+      (click)="workspace.display = 'list'"
+    >
+      Lista</button
+    ><button
+      [class.selected]="workspace.display === 'map'"
+      (click)="workspace.display = 'map'"
+    >
+      Mapa
+    </button>
+  </div>
+  <button class="button" (click)="workspace.share()">
+    {{ navigation.copied() ? "Skopiowano" : "Udostępnij widok ↗" }}
+  </button>
+</div>
+@if (workspace.display === "map") {
+  <app-map
+    [rows]="workspace.filtered()"
+    (selectQueue)="navigation.openFacility($event)"
+  />
+}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th scope="col">Porównaj</th>
+        <th scope="col">
+          <button (click)="workspace.setSort('provider')">Placówka ↕</button>
+        </th>
+        <th scope="col">
+          <button (click)="workspace.setSort('locality')">
+            Miejscowość ↕
+          </button>
+        </th>
+        <th scope="col">Świadczenie</th>
+        <th scope="col">
+          <button (click)="workspace.setSort('pcusDays')">PCUŚ ↕</button>
+        </th>
+        <th scope="col">
+          <button (click)="workspace.setSort('awaiting')">
+            Wpisy oczekujących ↕
+          </button>
+        </th>
+        <th scope="col">Aktualizacja</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (q of workspace.paged(); track q.id + "|" + q.case) {
+        <tr>
+          <td>
+            <input
+              type="checkbox"
+              [checked]="comparison.contains(q)"
+              (change)="comparison.toggle(q)"
+              [disabled]="
+                !comparison.contains(q) && comparison.selected().length >= 4
+              "
+              [attr.aria-label]="'Porównaj ' + q.provider + ' ' + q.place"
+            />
+          </td>
+          <td>
+            <a class="facility-link" [href]="navigation.facilityLink(q)">{{
+              q.provider
+            }}</a
+            ><small>{{ q.place }}</small>
+            <app-contact [row]="q" [compact]="true" />
+          </td>
+          <td>
+            {{ q.locality }}<small>{{ q.county }}</small>
+          </td>
+          <td>
+            {{ q.benefit
+            }}<small>{{ q.case === 1 ? "stabilny" : "pilny" }}</small>
+          </td>
+          <td class="pcus">
+            {{ q.pcus ?? "brak danych"
+            }}<small>{{
+              q.pcusApplicable ? "prognoza NFZ" : "PCUŚ nie dotyczy"
+            }}</small>
+          </td>
+          <td>
+            {{ number(q.awaiting)
+            }}<small>{{ q.reportingPeriod ?? "brak okresu" }}</small>
+          </td>
+          <td>
+            {{ q.pcusUpdatedAt ?? "brak daty"
+            }}<small [class.stale]="freshness(q) !== 'Dane aktualne'">{{
+              freshness(q)
+            }}</small>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<div class="pagination no-print">
+  <span
+    >Strona {{ workspace.page }} z {{ workspace.pages() }} · liczba wyników:
+    {{ workspace.filtered().length }}</span
+  ><label
+    >Na stronie<select
+      [(ngModel)]="workspace.pageSize"
+      (change)="workspace.page = 1"
+    >
+      <option [ngValue]="20">20</option>
+      <option [ngValue]="50">50</option>
+    </select></label
+  ><button
+    (click)="workspace.page = workspace.page - 1"
+    [disabled]="workspace.page <= 1"
+  >
+    ← Poprzednia</button
+  ><button
+    (click)="workspace.page = workspace.page + 1"
+    [disabled]="workspace.page >= workspace.pages()"
+  >
+    Następna →
+  </button>
+</div>
+<app-queue-comparison />

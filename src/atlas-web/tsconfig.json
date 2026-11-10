@@ -9,7 +9,11 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "importHelpers": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true
   },
   "angularCompilerOptions": {
     "strictTemplates": true,

@@ -1,0 +1,11 @@
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+@page {
+  size: A4;
+  margin: 17mm 14mm 18mm;
+}

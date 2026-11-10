@@ -9,6 +9,7 @@ Angular 21 + .NET 10. Statyczny frontend, bez backendu, logowania i śledzenia. 
 Wymagane .NET SDK 10 i Node 22 (minimum dla Angular 21: Node 20.19).
 
 ```sh
+dotnet tool restore
 dotnet restore NfzAtlas.sln
 dotnet test NfzAtlas.sln
 npm ci --prefix src/atlas-web
@@ -18,9 +19,11 @@ npm start --prefix src/atlas-web
 Otwórz adres wypisany przez Angular CLI. `prestart` i `prebuild` kopiują wyłącznie manifest i bieżące agregacje do plików publicznych. Archiwum źródłowe nie trafia na Pages.
 
 ```sh
+npm run architecture:check --prefix src/atlas-web
 npm run check --prefix src/atlas-web
 npm test --prefix src/atlas-web
 npm run build --prefix src/atlas-web -- --base-href /nfz-monitor/
+dotnet csharpier check src tests
 dotnet format NfzAtlas.sln --verify-no-changes
 ```
 
@@ -73,6 +76,16 @@ NFZ_DATA_DIR=.etl-local/data npm start --prefix src/atlas-web
 - Widoczne „Zadzwoń” oraz „Odwołaj wizytę” rozwijające numer kontaktowy NFZ na liście i w szczegółach. Numer nie jest przedstawiany jako dedykowana infolinia do odwołań.
 - Jasny i ciemny motyw, tabele alternatywne dla wykresów, etykiety formularzy, obsługa klawiatury i responsywny układ.
 
+## Organizacja kodu
+
+Frontend zachowuje podział stosowany w Longrest: `core` zawiera repozytorium danych, modele, routing i obsługę błędów; `modules` obejmuje strony i serwisy poszczególnych funkcji; `shared` przechowuje wykresy, kontakt, mapowanie regionów i formatowanie. Główny komponent odpowiada za powłokę portalu. Angular Router ładuje strony na żądanie i zachowuje adresy `#/atlas`, `#/facility` oraz parametry raportów.
+
+Stan wyszukiwarki jest ograniczony do czasu życia strony. Analityka korzysta z wyliczanych sygnałów, a eksport PDF stanowi osobny serwis i ładuje generator dopiero na żądanie. Porównanie kolejek i motyw są współdzielone. Nieaktualne odpowiedzi asynchroniczne są odrzucane po zmianie zakresu lub opuszczeniu strony. Formularze synchronizują konfigurację z URL bez przewijania strony przy każdej zmianie filtra.
+
+Logika analityczna, formatowanie i parser konfiguracji są napisane w TypeScript. `npm test` kompiluje i sprawdza tę samą implementację, która trafia do przeglądarki; nie utrzymujemy osobnych deklaracji typów dla kopii JavaScript. Włączone są ścisłe typowanie, sprawdzanie szablonów, nieużywanych symboli i parametrów. Style są podzielone na warstwy i reguły funkcji; kontakt i szczegóły placówki mają również style komponentów.
+
+ETL rozdziela `EtlOptions` (walidacja konfiguracji), `EtlRunner` (koordynacja procesu) i krótki punkt wejścia. Modele domenowe mają osobne pliki. CSharpier jest przypięty w manifeście narzędzi .NET; CI sprawdza granice zależności `core` / `modules` / `shared`, formatowanie obu części projektu, kompilację i testy.
+
 ## Historia, odtwarzanie i ograniczenia
 
 Gałąź `data` zawiera trwałe obserwacje źródłowe, normalizowaną historię i najnowsze agregacje. Nie usuwaj jej podczas sprzątania branchy. Kopia zapasowa: `git clone --mirror https://github.com/piboke/nfz-monitor.git`. Nieudany ETL zachowuje poprzedni manifest i checkpointy. Wznowienie wymaga tego samego katalogu `--work`; po 12 godzinach lub zmianie liczników partycja jest pobierana od nowa. Brakujące strony checkpointu są uzupełniane i walidowane.
@@ -93,7 +106,7 @@ Budżety: 700 MiB na zestawienia jednej publikacji, 900 MiB na aktywne pliki arc
 
 ## Weryfikacja i zasoby
 
-Testy działają offline: 32 testy xUnit i 12 testów analityki i prezentacji JavaScript. Build, TypeScript, formatowanie i CI są sprawdzane automatycznie. Ręcznie sprawdzono Safari, układ 375 × 667 px, filtry, porównanie, szczegóły placówki, mapę, motywy oraz pobieranie PDF z Pages. Czterostronicowy raport A4 sprawdzono wizualnie po renderowaniu przez PDFKit.
+Testy działają offline: 40 testów xUnit i 16 testów analityki, prezentacji i konfiguracji URL w TypeScript. Build, TypeScript, formatowanie i CI są sprawdzane automatycznie. Ręcznie sprawdzono Safari, układ 375 × 667 px, filtry, porównanie, szczegóły placówki, mapę, motywy oraz pobieranie PDF z Pages. Czterostronicowy raport A4 sprawdzono wizualnie po renderowaniu przez PDFKit.
 
 `npm audit --omit=dev`: 0 znanych podatności podczas ostatniej kontroli. Pełny audyt narzędzi builda zgłasza umiarkowane ostrzeżenia dotyczące `glob`; narzędzia te nie są publikowane w witrynie. Nie stosuj bez weryfikacji `npm audit fix --force`, który proponuje obniżenie Angulara.
 

@@ -1,0 +1,7 @@
+<app-explorer-filters />
+@if (workspace.filtered().length && !workspace.loading()) {
+  <app-report-settings
+    (download)="exporter.download(document.charts.toArray())"
+  />
+  <app-report-document #document />
+}

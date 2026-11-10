@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+}
+.call-button {
+  gap: 10px;
+  font-size: 15px;
+}
+.call-number {
+  font-variant-numeric: tabular-nums;
+}
+.contact-compact {
+  gap: 8px;
+  margin: 12px 0 0;
+}
+.contact-compact .button {
+  padding: 8px 12px;
+  gap: 6px;
+  font-size: 12px;
+}
+.cancellation-info {
+  border-left: 3px solid var(--red);
+  background: var(--paper);
+  padding: 20px;
+  margin: 12px 0 20px;
+  max-width: 650px;
+  white-space: normal;
+}
+.cancellation-info h3 {
+  font-size: 19px;
+  margin-bottom: 12px;
+}
+.cancellation-phones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 12px 0;
+  font-size: 22px;
+  font-weight: 750;
+}
+.cancellation-phones a {
+  padding-block: 8px;
+}
+@media (max-width: 600px) {
+  .contact-actions:not(.contact-compact) .button {
+    width: 100%;
+  }
+  .call-button {
+    flex-wrap: wrap;
+  }
+}

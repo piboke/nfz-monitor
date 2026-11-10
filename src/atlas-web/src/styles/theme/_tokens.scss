@@ -1,0 +1,25 @@
+:root {
+  --red: #b60500;
+  --accent: #e10600;
+  --ink: #222b36;
+  --muted: #626b76;
+  --paper: #f2f3f5;
+  --line: #dfe2e6;
+  --white: #fff;
+  --soft-red: #fff0ed;
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--white);
+}
+:root[data-theme="dark"] {
+  --red: #ff736c;
+  --accent: #ff736c;
+  --ink: #f0f2f5;
+  --muted: #b4bdc9;
+  --paper: #202732;
+  --line: #3c4655;
+  --white: #141a23;
+  --soft-red: #351f23;
+  color-scheme: dark;
+}

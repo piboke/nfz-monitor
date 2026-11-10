@@ -1,0 +1,157 @@
+<div class="page-heading no-print">
+  <a href="#/atlas">← Wróć do Atlasu</a>
+  <p class="eyebrow">SZCZEGÓŁY ŚWIADCZENIODAWCY</p>
+</div>
+@if (loading()) {
+  <p role="status">Pobieranie danych placówki…</p>
+}
+@if (error()) {
+  <div class="notice error" role="alert">{{ error() }}</div>
+}
+@if (detail(); as q) {
+  <section class="panel">
+    <h1 class="facility-title">{{ q.provider }}</h1>
+    <p>
+      {{ q.place }} · {{ q.address }}, {{ q.locality }} · powiat
+      {{ q.county }}
+    </p>
+    <p>
+      Kod świadczeniodawcy NFZ: {{ q.providerCode }} · identyfikator miejsca:
+      {{ q.facilityId }}
+    </p>
+    <app-contact [row]="q" />
+    @if (q.email || q.website) {
+      <p class="caption">
+        {{ q.email }}{{ q.email && q.website ? " · " : "" }}{{ q.website }}
+      </p>
+    }
+    <div class="mini-stats">
+      <div>
+        <strong>{{ q.pcus ?? "brak danych" }}</strong
+        ><span>PCUŚ · {{ q.pcusUpdatedAt ?? "brak daty" }}</span>
+      </div>
+      <div>
+        <strong>{{ number(q.awaiting) }}</strong
+        ><span
+          >wpisy oczekujących · {{ q.reportingPeriod ?? "brak okresu" }}</span
+        >
+      </div>
+      <div>
+        <strong>{{ number(q.removed) }}</strong
+        ><span
+          >skreśleni po świadczeniu ·
+          {{ q.reportingPeriod ?? "brak okresu" }}</span
+        >
+      </div>
+      <div>
+        <strong>{{
+          q.averageDays === null
+            ? "brak danych"
+            : number(q.averageDays) + " dni"
+        }}</strong
+        ><span>średni czas · dane placówki</span>
+      </div>
+    </div>
+    <dl class="facility-facts">
+      <div>
+        <dt>Średni czas oczekiwania wyliczony przez NFZ</dt>
+        <dd>
+          @if (q.computedAverageDays !== null) {
+            {{ number(q.computedAverageDays) }} dni
+            @if (q.computedPeriod) {
+              <small>Okres danych: {{ q.computedPeriod }}</small>
+            }
+          } @else {
+            NFZ nie podał wyliczenia.
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Zakres wieku pacjentów</dt>
+        <dd>{{ ageRangeLabel(q.ageRange) }}</dd>
+      </div>
+      <div>
+        <dt>Świadczenia dla dzieci</dt>
+        <dd>
+          {{
+            q.forChildren === null
+              ? "NFZ nie podał informacji."
+              : q.forChildren
+                ? "Tak, według danych NFZ."
+                : "Nie, według danych NFZ."
+          }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+  <section class="panel section-space">
+    <h2>Świadczenia w dostępnym zbiorze</h2>
+    <p class="caption">
+      Zakres może obejmować tylko część działalności świadczeniodawcy. Wybierz
+      kolejkę, aby zobaczyć jej historię.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Świadczenie</th>
+            <th>Miejsce</th>
+            <th>Kategoria</th>
+            <th>PCUŚ</th>
+            <th>Porównanie</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of detailRows(); track row.id + "|" + row.case) {
+            <tr>
+              <td>
+                <button class="facility-link" (click)="chooseDetail(row)">
+                  {{ row.benefit }}
+                </button>
+              </td>
+              <td>{{ row.place }} · {{ row.locality }}</td>
+              <td>{{ row.case === 1 ? "stabilny" : "pilny" }}</td>
+              <td>{{ row.pcus ?? "brak danych" }}</td>
+              <td>
+                <button (click)="comparison.toggle(row)">
+                  {{
+                    comparison.contains(row)
+                      ? "Usuń z porównania"
+                      : "Dodaj do porównania"
+                  }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel section-space">
+    <h2>Historia: {{ q.benefit }}</h2>
+    @if (detailSeries().length < 2) {
+      <div class="notice">Niewystarczająca historia do ustalenia trendu.</div>
+    }
+    <app-chart
+      [labels]="detailLabels()"
+      [values]="detailValues()"
+      title="Wpisy oczekujących"
+    />
+    <p class="caption">
+      Okresy źródłowe, ostatnia rewizja. Kolejka {{ q.id }} · kategoria
+      {{ q.case }}.
+    </p>
+    <a
+      [href]="
+        navigation.comparisonLink(q).replace('#/atlas', '#/radar') +
+        '&queue=' +
+        q.id
+      "
+      >Analizuj tę kolejkę w Radarze ↗</a
+    >
+    ·
+    <a [href]="navigation.comparisonLink(q)"
+      >Porównaj z placówkami realizującymi to świadczenie ↗</a
+    >
+  </section>
+}

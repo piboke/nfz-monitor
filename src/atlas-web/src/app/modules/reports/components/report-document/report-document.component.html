@@ -1,0 +1,350 @@
+<article class="report-document">
+  <div class="report-title">
+    <p class="eyebrow">ATLAS & RADAR / RAPORT ANALITYCZNY</p>
+    <h2>
+      {{
+        workspace.mode() === "reports"
+          ? analysis.reportTitle()
+          : "Historia i porównanie okresów"
+      }}
+    </h2>
+    <p>
+      {{
+        workspace.mode() === "reports"
+          ? workspace.reportServices()
+          : workspace.serviceText
+      }}
+      ·
+      {{
+        workspace.filters.province
+          ? regions[workspace.filters.province]
+          : "Cały dostępny zakres"
+      }}
+      · {{ workspace.filters.county || "wszystkie powiaty" }}
+    </p>
+    <p class="caption">
+      Kategoria:
+      {{
+        workspace.filters.category === "1"
+          ? "stabilny"
+          : workspace.filters.category === "2"
+            ? "pilny"
+            : "obie, jako osobne kolejki"
+      }}. Okres: {{ workspace.from || "brak" }} — {{ workspace.to || "brak" }}.
+      Wygenerowano:
+      {{
+        exporter.generatedAt() | date: "dd.MM.yyyy, HH:mm" : "Europe/Warsaw"
+      }}.
+    </p>
+    <p class="caption">
+      Zakres: {{ data.manifest()?.scope }}. Kompletność pobrania:
+      {{
+        data.manifest()?.complete
+          ? "pełna w zadeklarowanym zakresie"
+          : "niekompletna"
+      }}.
+    </p>
+  </div>
+  <div class="mini-stats">
+    <div>
+      <strong>{{ workspace.filtered().length }}</strong
+      ><span>kolejek w zakresie</span>
+    </div>
+    <div>
+      <strong>{{ number(sum(workspace.filtered(), "awaiting")) }}</strong
+      ><span>wpisów · ostatnie dane źródłowe, różne okresy</span>
+    </div>
+    <div>
+      <strong>{{ number(analysis.medianPcus()) }}</strong
+      ><span>dni · mediana PCUŚ</span>
+    </div>
+    <div>
+      <strong>{{ analysis.comparison().length }}</strong
+      ><span>kolejek porównywalnych między okresami</span>
+    </div>
+  </div>
+  @if (analysis.chartSeries().length < 2 || !analysis.comparison().length) {
+    <div class="notice">
+      Niewystarczająca historia porównywalnych kolejek do ustalenia trendu.
+      Dostępnych punktów: {{ analysis.chartSeries().length }}, wspólnych par:
+      {{ analysis.comparison().length }}. Kolejne obserwacje pojawią się, gdy
+      NFZ dostarczy nowe dane źródłowe.
+    </div>
+  }
+  @if (workspace.from > workspace.to) {
+    <div class="notice error">
+      Okres początkowy jest późniejszy niż końcowy.
+    </div>
+  }
+  <section class="panel section-space">
+    <h3>{{ analysis.metricLabel() }} w czasie</h3>
+    <app-chart
+      [labels]="analysis.chartLabels()"
+      [values]="analysis.chartValues()"
+      [title]="analysis.metricLabel()"
+      [type]="analysis.comparison().length ? workspace.chartType : 'bar'"
+    />
+    <p class="caption">
+      Liczba raportujących kolejek może zmieniać się między punktami. Ten wykres
+      pokazuje poziomy; porównanie zmian poniżej obejmuje wyłącznie wspólne
+      kolejki.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Okres</th>
+          <th>Wartość</th>
+          <th>Kolejki z danymi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of analysis.chartSeries(); track p.period) {
+          <tr>
+            <td>{{ p.period }}</td>
+            <td>{{ number(p.value) }}</td>
+            <td>{{ p.coverage }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  <section class="panel section-space print-section">
+    <h3>Mapa porównawcza województw · {{ analysis.metricLabel() }}</h3>
+    <div class="poland-map report-map">
+      <img src="poland.svg" alt="Obrys Polski" width="500" height="430" />
+      @for (code of regionCodes; track code) {
+        <span
+          class="region-dot thematic-dot"
+          [ngStyle]="analysis.reportRegionStyle(code)"
+          [title]="
+            regions[code] + ': ' + number(analysis.reportRegionValue(code))
+          "
+          >{{
+            analysis.reportRegionValue(code) === null
+              ? "—"
+              : number(analysis.reportRegionValue(code))
+          }}</span
+        >
+      }
+    </div>
+    <p class="caption">
+      Mapa punktowa: rozmiar znacznika oznacza wartość w województwie. Szary lub
+      znak „—” — brak danych. Dane liczbowe i nazwy województw w tabeli poniżej.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Województwo</th>
+          <th>{{ analysis.metricLabel() }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (code of regionCodes; track code) {
+          <tr>
+            <td>{{ regions[code] }}</td>
+            <td>{{ number(analysis.reportRegionValue(code)) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+  <section class="panel section-space print-section">
+    <h3>Porównanie obszarów · ostatni stan</h3>
+    <app-chart
+      [labels]="analysis.groupLabels()"
+      [values]="analysis.groupValues()"
+      [title]="analysis.metricLabel()"
+      type="bar"
+    />
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Obszar / grupa</th>
+            <th>Kolejki</th>
+            <th>Wpisy oczekujących</th>
+            <th>Skreśleni po świadczeniu</th>
+            <th>Mediana PCUŚ (dni)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of analysis.groups(); track g.name) {
+            <tr>
+              <td>{{ g.name }}</td>
+              <td>{{ g.queues }} ({{ g.known }} ze statystyką)</td>
+              <td>{{ number(g.awaiting) }}</td>
+              <td>{{ number(g.removed) }}</td>
+              <td>{{ number(g.pcus) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">
+      Własne zestawienia ostatnich dostępnych wartości; okresy poszczególnych
+      kolejek mogą się różnić. Nie są oficjalnymi wskaźnikami regionalnymi NFZ.
+    </p>
+  </section>
+  <section class="panel section-space">
+    <h3>
+      Zmiany na wspólnych kolejkach · {{ workspace.from }} → {{ workspace.to }}
+    </h3>
+    @if (!analysis.comparison().length) {
+      <p>Brak porównywalnych par z wartościami w obu okresach.</p>
+    } @else {
+      <app-chart
+        [labels]="analysis.changeLabels()"
+        [values]="analysis.changeValues()"
+        title="Zmiana procentowa (wspólne kolejki)"
+        type="bar"
+      />
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Placówka</th>
+              <th>Zmiana</th>
+              <th>Zmiana procentowa</th>
+              <th>Sygnał</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of analysis.comparison(); track c.id + "|" + c.case) {
+              <tr>
+                <td>{{ analysis.queueName(c.id, c.case) }}</td>
+                <td>{{ number(c.delta) }}</td>
+                <td>
+                  {{
+                    c.percent === null
+                      ? "brak podstawy (0)"
+                      : number(c.percent) + "%"
+                  }}
+                </td>
+                <td>
+                  {{
+                    analysis.isJump(c.delta, c.percent)
+                      ? "Duża zmiana — wymaga weryfikacji"
+                      : "—"
+                  }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+  <section class="panel section-space print-section">
+    <h3>Aktualność i braki w danych</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Placówka</th>
+            <th>Okres statystyk</th>
+            <th>Aktualizacja PCUŚ</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (q of workspace.filtered(); track q.id + "|" + q.case) {
+            @if (
+              freshness(q) !== "Dane aktualne" ||
+              q.awaiting === null ||
+              q.pcus === null
+            ) {
+              <tr>
+                <td>{{ q.provider }} · {{ q.locality }}</td>
+                <td>{{ q.reportingPeriod ?? "brak" }}</td>
+                <td>{{ q.pcusUpdatedAt ?? "brak" }}</td>
+                <td>
+                  {{ freshness(q)
+                  }}{{ q.awaiting === null ? " · brak liczby oczekujących" : ""
+                  }}{{ q.pcus === null ? " · brak PCUŚ" : "" }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="caption">
+      Anomalia jest sygnałem do weryfikacji. Nie stanowi dowodu
+      nieprawidłowości.
+    </p>
+  </section>
+  <section class="panel section-space print-section">
+    <h3>Sygnały jakości danych · ostatnia synchronizacja</h3>
+    @if (!analysis.filteredEvents().length) {
+      <p>Brak zarejestrowanych sygnałów w wybranym zakresie.</p>
+    } @else {
+      @for (chunk of analysis.qualityChunks(); track $index) {
+        <div class="quality-chunk" [class.following]="$index > 0">
+          @if ($index > 0) {
+            <h4 class="print-only">Sygnały jakości danych — ciąg dalszy</h4>
+          }
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Placówka / kolejka</th>
+                  <th>Sygnał</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  event of chunk;
+                  track event.queueId + "|" + event.category + "|" + event.kind
+                ) {
+                  <tr>
+                    <td>
+                      {{ analysis.queueName(event.queueId, event.category) }}
+                    </td>
+                    <td>{{ event.message }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+    <p class="caption">
+      Sygnał tekstowego PCUŚ opisuje ograniczenie przeliczenia na dni, a nie
+      błąd placówki. Anomalie wymagają weryfikacji.
+    </p>
+  </section>
+  <section class="method-note">
+    <h3>Źródła, metodologia i ograniczenia</h3>
+    <p>
+      Źródło: Narodowy Fundusz Zdrowia, API Terminy Leczenia PCUŚ.
+      <a href="https://api.nfz.gov.pl/">api.nfz.gov.pl</a> ·
+      <a href="https://apinfz.nfz.gov.pl/app-itl-api-pcus/">dokumentacja API</a
+      >. Pobranie:
+      {{
+        data.manifest()?.lastSync | date: "dd.MM.yyyy, HH:mm" : "Europe/Warsaw"
+      }}.
+    </p>
+    <p>
+      Wpisy oczekujących sumujemy wyłącznie jako wpisy w kolejkach, nie
+      unikalnych pacjentów. Skreśleni oznaczają osoby skreślone z powodu
+      udzielenia świadczenia, nie wszystkie wykonane procedury. Mediana PCUŚ to
+      środkowa wartość jawnych prognoz w dniach; nie jest oficjalną średnią NFZ.
+    </p>
+    <p>
+      Oś czasu używa okresów statystyk lub dat aktualizacji PCUŚ. Dla każdego
+      okresu uwzględniamy ostatnią pobraną rewizję. Zmiany porównujemy na
+      wspólnych identyfikatorach kolejek i tej samej kategorii; procent =
+      (koniec − początek) / początek × 100. Dla podstawy zero procentu nie
+      obliczamy. Braki pozostają brakami. Liczba raportujących kolejek jest
+      podana przy każdym punkcie.
+    </p>
+    <p>
+      PCUŚ jest prognozą, nie gwarantowaną datą przyjęcia. Interpretacja tekstu
+      na dni obejmuje jedynie „N dni” i „1 dzień”. Pozostałe opisy zachowujemy w
+      oryginale. Aktualność wymaga okresu statystyk nie starszego niż dwa
+      miesiące i aktualizacji PCUŚ nie starszej niż 35 dni. Dane o długości
+      kolejki nie oceniają jakości leczenia.
+    </p>
+  </section>
+</article>

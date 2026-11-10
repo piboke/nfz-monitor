@@ -1,0 +1,80 @@
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 25px;
+  margin: 58px 0 26px;
+}
+.section-heading h2 {
+  margin-top: 9px;
+}
+.section-heading > a {
+  font-size: 12px;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.stats article {
+  padding: 25px 22px 28px;
+  border-left: 1px solid var(--line);
+}
+.stats article:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.stats p {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 550;
+}
+.stats strong {
+  display: block;
+  font-size: 39px;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+  margin: 14px 0 10px;
+  font-weight: 700;
+}
+.stats strong span {
+  font-size: 21px;
+}
+.stats small {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  display: block;
+}
+.two-col {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 28px;
+}
+.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+.section-space {
+  margin-top: 28px;
+}
+.panel {
+  border: 1px solid var(--line);
+  padding: 28px;
+  background: var(--white);
+}
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.panel-heading a {
+  font-size: 11px;
+}
+.panel h3 {
+  margin-bottom: 20px;
+}

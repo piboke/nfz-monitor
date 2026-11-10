@@ -1,12 +1,12 @@
+import { providerFileKey } from "../src/app/core/data/provider-file-key.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  providerFileKey,
   median,
   filterRows,
   periodSeries,
   changes,
-} from "../src/app/analytics.mjs";
+} from "../src/app/core/analytics/queue-analytics.js";
 const row = {
   id: "a",
   case: 1,

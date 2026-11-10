@@ -1,0 +1,119 @@
+<section class="report-config panel no-print">
+  <div class="filter-grid">
+    @if (workspace.mode() === "reports") {
+      <label class="wide"
+        >Dodatkowe świadczenia (do 4; Ctrl / ⌘ + kliknięcie)<select
+          multiple
+          size="4"
+          [(ngModel)]="workspace.additionalBenefits"
+          (ngModelChange)="workspace.load()"
+        >
+          @for (b of data.benefits(); track b.id) {
+            @if (b.id !== workspace.filters.benefit) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          }
+        </select></label
+      ><label class="wide"
+        >Wybrane placówki (puste = wszystkie)<select
+          multiple
+          size="4"
+          [(ngModel)]="workspace.reportProviders"
+          (ngModelChange)="workspace.localFilters()"
+        >
+          @for (p of workspace.providerOptions(); track p.id) {
+            <option [value]="p.id">{{ p.name }}</option>
+          }
+        </select></label
+      >
+    }
+    <label class="wide"
+      >Identyfikator konkretnej kolejki (opcjonalnie)<input
+        [(ngModel)]="workspace.filters.queue"
+        (ngModelChange)="workspace.localFilters()"
+        placeholder="UUID kolejki ze szczegółów placówki"
+    /></label>
+    @if (workspace.mode() === "reports") {
+      <label class="wide"
+        >Szablon raportu<select
+          [(ngModel)]="workspace.reportTemplate"
+          (change)="workspace.templateChanged()"
+        >
+          @for (t of templates; track t) {
+            <option [ngValue]="$index">{{ t }}</option>
+          }
+        </select></label
+      >
+    }
+    <label
+      >Wskaźnik<select
+        [(ngModel)]="workspace.metric"
+        (change)="workspace.metricChanged()"
+      >
+        <option value="awaiting">Wpisy oczekujących</option>
+        <option value="removed">Skreśleni po świadczeniu</option>
+        <option value="pcusDays">Mediana PCUŚ (dni)</option>
+      </select></label
+    ><label
+      >Okres od<select
+        [(ngModel)]="workspace.from"
+        (change)="workspace.updateUrl()"
+      >
+        @for (p of workspace.periods(); track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select></label
+    ><label
+      >Okres do<select
+        [(ngModel)]="workspace.to"
+        (change)="workspace.updateUrl()"
+      >
+        @for (p of workspace.periods(); track p) {
+          <option [value]="p">{{ p }}</option>
+        }
+      </select></label
+    ><label
+      >Grupowanie<select
+        [(ngModel)]="workspace.group"
+        (change)="workspace.updateUrl()"
+      >
+        <option value="province">Województwo</option>
+        <option value="county">Powiat</option>
+        <option value="facility">Świadczeniodawca</option>
+        <option value="benefit">Świadczenie</option>
+      </select></label
+    ><label
+      >Typ wykresu<select [(ngModel)]="workspace.chartType">
+        <option value="line">Liniowy</option>
+        <option value="bar">Słupkowy</option>
+      </select></label
+    >
+  </div>
+  <div class="filter-footer">
+    <span>Statystyki: okresy miesięczne. PCUŚ: daty aktualizacji prognozy.</span
+    ><button class="button" (click)="workspace.share()">
+      {{
+        navigation.copied() ? "Skopiowano adres" : "Udostępnij konfigurację ↗"
+      }}
+    </button>
+    @if (workspace.mode() === "reports") {
+      <button
+        class="button primary"
+        (click)="download.emit()"
+        [disabled]="
+          workspace.loading() ||
+          exporter.exporting() ||
+          !!workspace.error() ||
+          !!analysis.reportValidation()
+        "
+      >
+        {{ exporter.exporting() ? "Generowanie PDF…" : "Pobierz raport PDF ↓" }}
+      </button>
+    }
+  </div>
+</section>
+@if (workspace.mode() === "reports" && analysis.reportValidation()) {
+  <div class="notice no-print" role="status">
+    {{ analysis.reportValidation() }}
+  </div>
+}

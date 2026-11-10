@@ -1,0 +1,75 @@
+<div class="page-heading">
+  <p class="eyebrow">JAWNE ZASADY ANALIZY</p>
+  <h1>Co mówią dane.<br />I czego nie mówią.</h1>
+</div>
+<article class="prose">
+  <h2>Cztery warstwy informacji</h2>
+  <p>
+    Dane źródłowe to oryginalne odpowiedzi NFZ zachowane w archiwum. Dane
+    przetworzone mają ujednolicone identyfikatory i układ pól. Obliczenia własne
+    obejmują mediany, sumy wpisów, zmiany i pokrycie danych. Sygnały o zmianach
+    są wskazówką do weryfikacji, nie oceną placówek.
+  </p>
+  <h2>PCUŚ</h2>
+  <p>
+    Prognozowany czas udzielenia świadczenia zachowujemy dokładnie w postaci
+    podanej przez NFZ. Nie jest gwarancją przyjęcia. Tylko jednoznaczne wartości
+    w dniach przeliczamy na liczbę; tekstowe przedziały pozostają tekstem. Nie
+    wyznaczamy z nich daty przyjęcia.
+  </p>
+  <h2>Wpisy i skreślenia</h2>
+  <p>
+    Liczba oczekujących dotyczy stanu listy na koniec miesiąca. Ta sama osoba
+    może być wpisana na więcej niż jedną listę. Sumy przedstawiają wpisy, nie
+    liczbę unikalnych pacjentów. Skreśleni z powodu udzielenia świadczenia nie
+    oznaczają wszystkich wykonanych procedur.
+  </p>
+  <h2>Agregacje</h2>
+  <p>
+    Nie sumujemy czasów. Mediana jest środkową wartością prognoz wyrażonych w
+    dniach (dla parzystej liczby: średnia dwóch środkowych). Podajemy liczbę
+    kolejek z dostępną wartością. Sumy ostatniego stanu mogą obejmować różne
+    miesiące raportowania; są opisem dostępnego zbioru. Nie są oficjalnymi
+    wskaźnikami regionalnymi NFZ.
+  </p>
+  <h2>Historia, rewizje i trendy</h2>
+  <p>
+    Datę pobrania, okres miesięcznych statystyk i datę aktualizacji PCUŚ
+    przechowujemy osobno. Niezmieniona obserwacja nie tworzy kolejnego punktu.
+    Oś wykresu używa dat źródłowych. Późniejsza rewizja danego okresu zastępuje
+    wcześniejszą wyłącznie na wykresie — archiwum zachowuje obie.
+  </p>
+  <p>
+    Zmiany miesięczne obliczamy wyłącznie między sąsiednimi okresami, na
+    wspólnych kolejkach, tej samej kategorii, świadczeniu i miejscu. Zmiana
+    procentowa to (nowa wartość − poprzednia) / poprzednia × 100. Dla podstawy 0
+    wynik pozostaje nieokreślony. Kreator pozwala też jawnie porównać dwa
+    wybrane okresy. Przy mniej niż dwóch punktach trend jest niedostępny.
+  </p>
+  <h2>Aktualność i anomalie</h2>
+  <p>
+    Kolejkę uznajemy za aktualną, gdy okres statystyk mieści się w ostatnich
+    dwóch miesiącach, a data PCUŚ w ostatnich 35 dniach; daty przyszłe nie
+    spełniają kryterium. To własny próg analityczny. Duża zmiana wpisów to co
+    najmniej 50 wpisów i 50% miesiąc do miesiąca; dla podstawy 0 wymagamy progu
+    bezwzględnego. Duża zmiana PCUŚ to co najmniej 90 dni między aktualizacjami.
+    Zmiany liczby raportujących kolejek są komunikowane jako zmiany pokrycia.
+  </p>
+  <h2>Braki i kompletność</h2>
+  <p>
+    Brak wartości pozostaje brakiem. Puste współrzędne nie są geokodowane ani
+    zastępowane środkiem miasta. Zbiór krajowy wymaga pobrania wszystkich stron
+    16 województw i obu kategorii oraz zgodności liczników. API nie zapewnia
+    transakcyjnej migawki: kontrola liczników i duplikatów wykrywa część zmian w
+    trakcie pobrania, ale nie gwarantuje jednoczesności danych. Błąd pozostawia
+    poprzednią publikację.
+  </p>
+  <h2>Źródło</h2>
+  <p>
+    <a href="https://api.nfz.gov.pl/">Narodowy Fundusz Zdrowia</a> ·
+    <a href="https://apinfz.nfz.gov.pl/app-itl-api-pcus/"
+      >API Terminy Leczenia PCUŚ, dokumentacja 1.4.1 / OpenAPI v1.4</a
+    >. Nowe API nie udostępnia kodu świadczenia w rekordzie kolejki; lokalny
+    identyfikator wyprowadzamy z nazwy i nie przedstawiamy go jako kod NFZ.
+  </p>
+</article>

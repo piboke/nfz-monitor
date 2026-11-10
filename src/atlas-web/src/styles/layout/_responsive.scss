@@ -1,0 +1,251 @@
+@media (min-width: 1500px) {
+  .hero {
+    gap: 100px;
+  }
+  .hero h1 {
+    font-size: 86px;
+  }
+}
+@media (max-width: 1050px) {
+  .shell {
+    width: calc(100% - 48px);
+  }
+  .header-inner {
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 20px 0;
+    min-height: 90px;
+  }
+  .brand {
+    font-size: 15px;
+  }
+  .brand-mark {
+    font-size: 36px;
+  }
+  nav {
+    gap: 18px;
+  }
+  nav a {
+    font-size: 12px;
+  }
+  .theme {
+    padding-left: 16px;
+  }
+  .hero {
+    gap: 30px;
+    padding: 45px 0;
+  }
+  .hero-art {
+    min-height: 360px;
+  }
+  .quick-search {
+    flex-wrap: wrap;
+  }
+  .quick-search > div {
+    width: 100%;
+  }
+  .quick-search label {
+    min-width: 180px;
+  }
+  .stats strong {
+    font-size: 31px;
+  }
+  .filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .filter-footer {
+    flex-wrap: wrap;
+  }
+  .filter-footer > span {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 760px) {
+  .shell {
+    width: calc(100% - 32px);
+  }
+  .header-inner {
+    position: relative;
+    padding-bottom: 0;
+    gap: 15px;
+  }
+  .brand {
+    margin-right: auto;
+  }
+  .theme {
+    border: 0;
+    order: 0;
+    padding: 8px;
+  }
+  nav {
+    order: 1;
+    margin: 0;
+    overflow-x: auto;
+    width: 100%;
+    gap: 24px;
+    white-space: nowrap;
+  }
+  nav a {
+    padding: 12px 0 14px;
+  }
+  .status-line {
+    flex-direction: column;
+    gap: 3px;
+    padding: 12px 0;
+    font-size: 10px;
+  }
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 35px 0;
+    gap: 30px;
+  }
+  .hero h1 {
+    font-size: 64px;
+  }
+  .hero-description {
+    max-width: 100%;
+  }
+  .hero-art {
+    min-height: 330px;
+  }
+  .poland-map {
+    max-width: 320px;
+  }
+  .quick-search {
+    gap: 15px;
+    padding: 21px;
+  }
+  .quick-search label {
+    width: 100%;
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .quick-search .button {
+    width: 100%;
+  }
+  .section-heading {
+    margin: 38px 0 20px;
+    display: block;
+  }
+  .section-heading h2 {
+    font-size: 27px;
+    margin-bottom: 12px;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stats article {
+    padding: 20px 15px;
+  }
+  .stats article:first-child {
+    padding-left: 15px;
+  }
+  .stats article:nth-child(odd) {
+    border-left: 0;
+  }
+  .stats article:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .stats strong {
+    font-size: 32px;
+  }
+  .two-col,
+  .three-col {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .panel {
+    padding: 21px;
+  }
+  .three-col {
+    gap: 0;
+  }
+  .feature {
+    padding-bottom: 28px;
+  }
+  .feature h3 br {
+    display: none;
+  }
+  .feature p {
+    max-width: 100%;
+  }
+  .feature h3 {
+    font-size: 25px;
+    margin: 12px 0;
+  }
+  .site-footer {
+    flex-wrap: wrap;
+    margin-top: 35px;
+    gap: 20px;
+    padding-bottom: 30px;
+  }
+  .site-footer p {
+    width: 100%;
+    order: 2;
+  }
+  .page-heading {
+    padding: 32px 0 22px;
+  }
+  .page-heading h1 {
+    font-size: 40px;
+  }
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+  }
+  .wide {
+    grid-column: span 2;
+  }
+  .filters {
+    padding: 18px;
+  }
+  .filter-footer {
+    gap: 10px;
+  }
+  .filter-footer .button {
+    flex: 1;
+  }
+  .results-heading {
+    flex-wrap: wrap;
+  }
+  .results-heading h2 {
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .results-heading > .button {
+    margin-left: auto;
+  }
+  .pagination {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pagination > span {
+    flex-basis: 100%;
+  }
+  .pagination label {
+    margin-right: auto;
+  }
+  .mini-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .mini-stats strong {
+    font-size: 25px;
+  }
+  .report-title h2 {
+    font-size: 29px;
+  }
+  .map {
+    height: 360px;
+  }
+  .prose {
+    font-size: 15px;
+  }
+  .prose h2 {
+    font-size: 23px;
+  }
+  .facility-title {
+    font-size: 24px;
+  }
+}

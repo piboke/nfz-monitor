@@ -1,0 +1,109 @@
+.shell {
+  width: min(1280px, calc(100% - 80px));
+  margin-inline: auto;
+}
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+}
+.header-inner {
+  min-height: 104px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  text-decoration: none;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.brand small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  margin-top: 8px;
+}
+.brand em {
+  font-style: normal;
+  color: var(--red);
+}
+.brand:hover em,
+.brand:hover .brand-mark span {
+  color: var(--ink);
+}
+.brand:hover .brand-mark i {
+  background: var(--ink);
+}
+.brand-mark {
+  font-size: 42px;
+  letter-spacing: -0.12em;
+  position: relative;
+  padding: 0 8px 8px 0;
+}
+.brand-mark span {
+  color: var(--red);
+}
+.brand-mark i {
+  position: absolute;
+  width: 32px;
+  height: 3px;
+  background: var(--red);
+  left: 3px;
+  bottom: 0;
+}
+nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+nav a {
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  padding: 12px 0;
+  border-bottom: 2px solid transparent;
+}
+nav a.active {
+  border-bottom-color: var(--accent);
+  color: var(--red);
+}
+.theme {
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+  font-size: 24px;
+  line-height: 1;
+  padding: 8px 0 8px 24px;
+  color: var(--ink);
+}
+.status-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+}
+.status-dot,
+.red-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  margin-right: 7px;
+}
+.status-dot {
+  background: #2e7a56;
+}
+.status-dot.warning {
+  background: var(--red);
+}

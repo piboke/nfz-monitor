@@ -1,0 +1,18 @@
+.facility-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 24px;
+  margin: 26px 0 0;
+}
+.facility-facts dt {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.facility-facts dd {
+  margin: 0;
+  font-size: 15px;
+}
+.facility-facts small {
+  display: block;
+}

@@ -1,0 +1,126 @@
+<div class="page-heading">
+  <p class="eyebrow">
+    {{
+      workspace.mode() === "atlas"
+        ? "01 / WYSZUKIWARKA"
+        : workspace.mode() === "radar"
+          ? "02 / OBSERWACJA ZMIAN"
+          : "03 / CENTRUM RAPORTÓW"
+    }}
+  </p>
+  <h1>
+    {{
+      workspace.mode() === "atlas"
+        ? "Atlas kolejek."
+        : workspace.mode() === "radar"
+          ? "Radar dostępności."
+          : "Dane. Pytania. Raporty."
+    }}
+  </h1>
+  <p class="muted">
+    {{
+      workspace.mode() === "atlas"
+        ? "Porównuj placówki na podstawie informacji źródłowych NFZ."
+        : workspace.mode() === "radar"
+          ? "Historia oparta na okresach źródłowych, z kontrolą porównywalności."
+          : "Wybierz zakres i przygotuj raport z wykresami, tabelami i metodologią."
+    }}
+  </p>
+</div>
+<section class="filters no-print" aria-label="Filtry danych">
+  <div class="filter-grid">
+    <label class="wide"
+      >Świadczenie<input
+        list="benefits"
+        [(ngModel)]="workspace.serviceText"
+        (change)="workspace.serviceChanged()"
+        placeholder="Wybierz nazwę z podpowiedzi" /><datalist id="benefits">
+        @for (b of data.benefits(); track b.id) {
+          <option [value]="b.name"></option>
+        }</datalist></label
+    ><label
+      >Województwo<select
+        [(ngModel)]="workspace.filters.province"
+        (change)="workspace.filters.county = ''; workspace.load()"
+      >
+        <option value="">Cały dostępny zakres</option>
+        @for (code of data.manifest()?.regions; track code) {
+          <option [value]="code">{{ regions[code] }}</option>
+        }
+      </select></label
+    ><label
+      >Kategoria medyczna<select
+        [(ngModel)]="workspace.filters.category"
+        (change)="workspace.load()"
+      >
+        <option value="1">Stabilny</option>
+        <option value="2">Pilny</option>
+        <option value="">Obie (osobne kolejki)</option>
+      </select></label
+    ><label
+      >Powiat<select
+        [(ngModel)]="workspace.filters.county"
+        (change)="workspace.localFilters()"
+      >
+        <option value="">Wszystkie powiaty</option>
+        @for (county of workspace.counties(); track county) {
+          <option [value]="county">{{ county }}</option>
+        }
+      </select></label
+    ><label
+      >Miejscowość<input
+        [(ngModel)]="workspace.filters.locality"
+        (ngModelChange)="workspace.localFilters()"
+        placeholder="Nazwa miejscowości" /></label
+    ><label
+      >Placówka<input
+        [(ngModel)]="workspace.filters.provider"
+        (ngModelChange)="workspace.localFilters()"
+        placeholder="Nazwa świadczeniodawcy" /></label
+    ><label
+      >Informacja o dzieciach<select
+        [(ngModel)]="workspace.filters.age"
+        (change)="workspace.localFilters()"
+      >
+        <option value="">Wszystkie / brak informacji</option>
+        <option value="children">NFZ: świadczenia dla dzieci</option>
+        <option value="adults">NFZ: brak świadczeń dla dzieci</option>
+      </select></label
+    ><label
+      >PCUŚ od (dni)<input
+        type="number"
+        min="0"
+        [(ngModel)]="workspace.filters.min"
+        (ngModelChange)="workspace.localFilters()" /></label
+    ><label
+      >PCUŚ do (dni)<input
+        type="number"
+        min="0"
+        [(ngModel)]="workspace.filters.max"
+        (ngModelChange)="workspace.localFilters()"
+    /></label>
+  </div>
+  <div class="filter-footer">
+    <span
+      >Filtr czasu obejmuje tylko PCUŚ podany jednoznacznie w dniach. Flaga
+      dzieci nie określa pełnego zakresu wieku.</span
+    ><button class="text-button" (click)="workspace.reset()">
+      Wyczyść filtry ↺</button
+    ><button class="button" (click)="workspace.load()">Odśwież wyniki</button>
+  </div>
+</section>
+@if (workspace.loading()) {
+  <div class="loading" role="status">Pobieranie wybranych zestawień…</div>
+}
+@if (workspace.error()) {
+  <div class="notice error" role="alert">{{ workspace.error() }}</div>
+}
+@if (!workspace.loading() && workspace.filtered().length === 0) {
+  <div class="panel empty">
+    <h2>Brak wyników w wybranym zakresie.</h2>
+    <p>
+      Zmień filtry lub sprawdź zakres dostępnych danych. Brak wyniku nie oznacza
+      braku świadczenia w Polsce.
+    </p>
+  </div>
+}
