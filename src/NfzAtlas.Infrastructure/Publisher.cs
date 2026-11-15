@@ -328,9 +328,9 @@ public sealed class Publisher(string dataRoot)
         var bytes = Directory
             .EnumerateFiles(stage, "*", SearchOption.AllDirectories)
             .Sum(f => new FileInfo(f).Length);
-        if (bytes > 700L * 1024 * 1024)
+        if (bytes > 850L * 1024 * 1024)
             throw new IOException(
-                "Zestawienia przekroczyły budżet 700 MiB GitHub Pages. Publikacja wstrzymana."
+                "Zestawienia przekroczyły budżet 850 MiB GitHub Pages. Publikacja wstrzymana."
             );
         if (
             Directory
