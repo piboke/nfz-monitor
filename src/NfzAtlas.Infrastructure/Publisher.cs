@@ -336,10 +336,10 @@ public sealed class Publisher(string dataRoot)
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
                 .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
+            > 1200L * 1024 * 1024
         )
             throw new IOException(
-                "Archiwum przekroczyło 900 MiB. Wymagana rotacja repozytorium archiwalnego."
+                "Archiwum przekroczyło 1200 MiB. Wymagana rotacja repozytorium archiwalnego."
             );
         // Manifest is the commit point. Consumers never see a generation without all its files.
         foreach (var write in historyWrites)
@@ -357,9 +357,9 @@ public sealed class Publisher(string dataRoot)
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
                 .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
+            > 1200L * 1024 * 1024
         )
-            throw new IOException("Archiwum przekroczyło 900 MiB.");
+            throw new IOException("Archiwum przekroczyło 1200 MiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
         foreach (var dir in Directory.EnumerateDirectories(Path.Combine(dataRoot, "aggregates")))
             if (Path.GetFileName(dir) != generation)
