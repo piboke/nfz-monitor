@@ -109,7 +109,15 @@ public sealed class PipelineTests : IDisposable
         var old = q with { Awaiting = 100, ReportingPeriod = "2026-09" };
         var result = Analytics.Summarize(
             "x",
-            [q, q with { Id = Guid.NewGuid().ToString(), Awaiting = 1000 }],
+            [
+                q,
+                q with
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    FacilityId = "another-facility",
+                    Awaiting = 1000,
+                },
+            ],
             [O(old)],
             new(2026, 11, 9)
         );
@@ -327,6 +335,10 @@ public sealed class PipelineTests : IDisposable
     }
 
     [Fact]
+    public void ArchiveBudgetAllowsCurrentRetentionWindow() =>
+        Assert.Equal(1200L * 1024 * 1024, Publisher.ArchiveSizeLimit);
+
+    [Fact]
     public async Task PublicationIsIdempotentAndPreservesHistoryAcrossBuilds()
     {
         var raw = Fixture().GetProperty("data")[0].Clone();
@@ -367,6 +379,28 @@ public sealed class PipelineTests : IDisposable
         );
         Assert.Equal(2, (await JsonFiles.Read<Observation[]>(historyPath))!.Length);
         Assert.Single(Directory.GetDirectories(Path.Combine(root, "aggregates")));
+    }
+
+    [Fact]
+    public async Task UuidRotationWithoutBusinessChangeDoesNotAppendHistory()
+    {
+        var raw = Fixture().GetProperty("data")[0].Clone();
+        var publisher = new Publisher(root);
+        var now = new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero);
+        await publisher.Publish([(new("07", 1), new[] { raw })], false, now, default);
+        var rotated = JsonNode.Parse(raw.GetRawText())!;
+        rotated["id"] = Guid.NewGuid().ToString();
+        await publisher.Publish(
+            [(new("07", 1), new[] { JsonSerializer.SerializeToElement(rotated) })],
+            false,
+            now.AddDays(1),
+            default
+        );
+        var historyPath = Directory
+            .GetFiles(Path.Combine(root, "history"), "*.gz", SearchOption.AllDirectories)
+            .Single();
+        Assert.Single((await JsonFiles.Read<Observation[]>(historyPath))!);
+        Assert.Single(Directory.GetFiles(Path.Combine(root, "snapshots"), "*.gz"));
     }
 
     [Fact]
@@ -489,12 +523,12 @@ public sealed class PipelineTests : IDisposable
             now.AddDays(1),
             default
         );
-        Assert.Equal(2, Directory.GetFiles(Path.Combine(root, "snapshots")).Length);
+        Assert.Single(Directory.GetFiles(Path.Combine(root, "snapshots")));
         var history = await JsonFiles.Read<HistoryPoint[]>(
             Path.Combine(root, m.Shards[0].HistoryPath)
         );
         Assert.Single(history!.Select(p => p.ReportingPeriod).Distinct());
-        Assert.Equal(2, history!.Length);
+        Assert.Single(history!);
     }
 
     [Fact]

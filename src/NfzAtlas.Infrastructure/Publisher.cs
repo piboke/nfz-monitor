@@ -17,6 +17,7 @@ public sealed record SourceObservation(
 public sealed class Publisher(string dataRoot)
 {
     public const string SchemaVersion = "1.0";
+    public const long ArchiveSizeLimit = 1200L * 1024 * 1024;
 
     public async Task<Manifest> Publish(
         IReadOnlyList<(Partition Partition, JsonElement[] Records)> partitions,
@@ -116,6 +117,7 @@ public sealed class Publisher(string dataRoot)
                     ",",
                     element
                         .EnumerateObject()
+                        .Where(p => !string.Equals(p.Name, "id", StringComparison.Ordinal))
                         .OrderBy(p => p.Name, StringComparer.Ordinal)
                         .Select(p =>
                             JsonSerializer.Serialize(p.Name) + ":" + CanonicalJson(p.Value)
@@ -128,6 +130,9 @@ public sealed class Publisher(string dataRoot)
             _ => element.GetRawText(),
         };
     }
+
+    private static string Fingerprint(QueueRow row) =>
+        Identity.Hash(JsonSerializer.Serialize(row with { Id = "" }, JsonFiles.Options));
 
     private async Task<Manifest> PublishCore(
         IReadOnlyList<(Partition Partition, JsonElement[] Records)> partitions,
@@ -165,19 +170,17 @@ public sealed class Publisher(string dataRoot)
                 var historyPath = Path.Combine(dataRoot, "history", key + ".json.gz");
                 var history = (await JsonFiles.Read<Observation[]>(historyPath, ct) ?? []).ToList();
                 var latest = history
-                    .GroupBy(o => o.Queue.Id)
+                    .GroupBy(o => Identity.QueueMatchKey(o.Queue))
                     .ToDictionary(g => g.Key, g => g.MaxBy(o => o.RetrievedAt)!);
                 var rows = group.Select(p => p.Row).OrderBy(q => q.Id).ToArray();
                 foreach (var item in group)
                 {
-                    var fingerprint = Identity.Hash(
-                        JsonSerializer.Serialize(item.Row, JsonFiles.Options)
-                    );
+                    var fingerprint = Fingerprint(item.Row);
                     var sourceFingerprint = Identity.Hash(CanonicalJson(item.Raw));
+                    var queueKey = Identity.QueueMatchKey(item.Row);
                     if (
-                        !latest.TryGetValue(item.Row.Id, out var prior)
+                        !latest.TryGetValue(queueKey, out var prior)
                         || prior.Fingerprint != fingerprint
-                        || prior.SourceFingerprint != sourceFingerprint
                     )
                     {
                         history.Add(
@@ -335,11 +338,10 @@ public sealed class Publisher(string dataRoot)
         if (
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
+                .Sum(f => new FileInfo(f).Length) > ArchiveSizeLimit
         )
             throw new IOException(
-                "Archiwum przekroczyło 900 MiB. Wymagana rotacja repozytorium archiwalnego."
+                "Archiwum przekroczyło 1200 MiB. Wymagana rotacja repozytorium archiwalnego."
             );
         // Manifest is the commit point. Consumers never see a generation without all its files.
         foreach (var write in historyWrites)
@@ -356,10 +358,9 @@ public sealed class Publisher(string dataRoot)
         if (
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
+                .Sum(f => new FileInfo(f).Length) > ArchiveSizeLimit
         )
-            throw new IOException("Archiwum przekroczyło 900 MiB.");
+            throw new IOException("Archiwum przekroczyło 1200 MiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
         foreach (var dir in Directory.EnumerateDirectories(Path.Combine(dataRoot, "aggregates")))
             if (Path.GetFileName(dir) != generation)

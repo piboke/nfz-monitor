@@ -27,4 +27,7 @@ public static class Identity
                     .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
             )
             .ToUpperInvariant();
+
+    public static string QueueMatchKey(QueueRow row) =>
+        string.Join('|', row.Case, row.FacilityId, row.BenefitId);
 }

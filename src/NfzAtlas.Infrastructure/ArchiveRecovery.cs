@@ -6,6 +6,36 @@ namespace NfzAtlas.Infrastructure;
 
 public static class ArchiveRecovery
 {
+    private static string Fingerprint(QueueRow row) =>
+        Identity.Hash(JsonSerializer.Serialize(row with { Id = "" }, JsonFiles.Options));
+
+    private static string SourceFingerprint(JsonElement source)
+    {
+        static string Canonical(JsonElement element)
+        {
+            return element.ValueKind switch
+            {
+                JsonValueKind.Object => "{"
+                    + string.Join(
+                        ",",
+                        element
+                            .EnumerateObject()
+                            .Where(p => !string.Equals(p.Name, "id", StringComparison.Ordinal))
+                            .OrderBy(p => p.Name, StringComparer.Ordinal)
+                            .Select(p =>
+                                JsonSerializer.Serialize(p.Name) + ":" + Canonical(p.Value)
+                            )
+                    )
+                    + "}",
+                JsonValueKind.Array => "["
+                    + string.Join(",", element.EnumerateArray().Select(Canonical))
+                    + "]",
+                _ => element.GetRawText(),
+            };
+        }
+        return Identity.Hash(Canonical(source));
+    }
+
     public static async Task<int> RebuildHistory(string dataRoot, CancellationToken ct)
     {
         var snapshots = Path.Combine(dataRoot, "snapshots");
@@ -18,7 +48,7 @@ public static class ArchiveRecovery
         if (files.Length == 0)
             throw new InvalidDataException("Puste archiwum; nie usunięto istniejącej historii.");
         var histories = new Dictionary<string, List<Observation>>();
-        var latest = new Dictionary<(string, int), Observation>();
+        var latest = new Dictionary<string, Observation>();
         var count = 0;
         foreach (var file in files)
         {
@@ -38,16 +68,14 @@ public static class ArchiveRecovery
                     throw new InvalidDataException(
                         "Identyfikator archiwum nie zgadza się ze źródłem."
                     );
-                var fingerprint = Identity.Hash(JsonSerializer.Serialize(row, JsonFiles.Options));
-                var key = (row.Id, row.Case);
+                var fingerprint = Fingerprint(row);
+                var sourceFingerprint = SourceFingerprint(record.Source);
+                var key = Identity.QueueMatchKey(row);
                 if (latest.TryGetValue(key, out var prior))
                 {
                     if (prior.RetrievedAt > record.RetrievedAt)
                         throw new InvalidDataException("Niejednoznaczna kolejność archiwum.");
-                    if (
-                        prior.Fingerprint == fingerprint
-                        && prior.SourceFingerprint == record.Fingerprint
-                    )
+                    if (prior.Fingerprint == fingerprint)
                         continue;
                 }
                 var observation = new Observation(
@@ -55,7 +83,7 @@ public static class ArchiveRecovery
                     record.RetrievedAt,
                     record.SchemaVersion,
                     row,
-                    record.Fingerprint
+                    sourceFingerprint
                 );
                 latest[key] = observation;
                 var shard = $"{row.Province}/{row.Case}/{row.BenefitId}.json.gz";

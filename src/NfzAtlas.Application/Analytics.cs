@@ -47,10 +47,13 @@ public static class Analytics
     )
     {
         var old = history
-            .GroupBy(o => (o.Queue.Id, o.Queue.Case))
+            .GroupBy(o => Identity.QueueMatchKey(o.Queue))
             .ToDictionary(g => g.Key, g => g.OrderByDescending(o => o.RetrievedAt).ToArray());
         var pairs = rows.Select(q =>
-                (Current: q, Prior: Previous(q, old.GetValueOrDefault((q.Id, q.Case)) ?? []))
+                (
+                    Current: q,
+                    Prior: Previous(q, old.GetValueOrDefault(Identity.QueueMatchKey(q)) ?? [])
+                )
             )
             .Where(p =>
                 p.Prior is not null && p.Current.Awaiting.HasValue && p.Prior.Awaiting.HasValue
@@ -74,7 +77,13 @@ public static class Analytics
             baseline == 0 ? null : Math.Round(delta * 100d / baseline, 2),
             Median(
                 rows.Select(q =>
-                        (Q: q, P: PreviousPcus(q, old.GetValueOrDefault((q.Id, q.Case)) ?? []))
+                        (
+                            Q: q,
+                            P: PreviousPcus(
+                                q,
+                                old.GetValueOrDefault(Identity.QueueMatchKey(q)) ?? []
+                            )
+                        )
                     )
                     .Where(p => p.Q.PcusDays.HasValue && p.P?.PcusDays is not null)
                     .Select(p => (double)p.Q.PcusDays!.Value - p.P!.PcusDays!.Value)
@@ -122,7 +131,7 @@ public static class Analytics
     )
     {
         var lookup = history
-            .GroupBy(o => (o.Queue.Id, o.Queue.Case))
+            .GroupBy(o => Identity.QueueMatchKey(o.Queue))
             .ToDictionary(g => g.Key, g => g.ToArray());
         var result = new List<QualityEvent>();
         foreach (var q in rows)
@@ -135,7 +144,7 @@ public static class Analytics
                 result.Add(
                     new(q.Id, "pcus-text", "Tekstowy PCUŚ bez jednoznacznego przeliczenia na dni.")
                 );
-            var prior = Previous(q, lookup.GetValueOrDefault((q.Id, q.Case)) ?? []);
+            var prior = Previous(q, lookup.GetValueOrDefault(Identity.QueueMatchKey(q)) ?? []);
             if (
                 q.Awaiting is int now
                 && prior?.Awaiting is int before
@@ -149,7 +158,7 @@ public static class Analytics
                         "Zmiana wpisów o co najmniej 50 i 50% miesiąc do miesiąca. Wymaga weryfikacji."
                     )
                 );
-            var pcus = PreviousPcus(q, lookup.GetValueOrDefault((q.Id, q.Case)) ?? []);
+            var pcus = PreviousPcus(q, lookup.GetValueOrDefault(Identity.QueueMatchKey(q)) ?? []);
             if (
                 q.PcusDays is int days
                 && pcus?.PcusDays is int old

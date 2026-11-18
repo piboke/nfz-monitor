@@ -102,7 +102,7 @@ Porównania obejmują wspólne identyfikatory kolejek, kategorię, świadczenie 
 
 Wpisy w kolejkach nie są liczbą unikalnych pacjentów, skreśleni z powodu udzielenia świadczenia nie oznaczają wszystkich procedur, PCUŚ nie gwarantuje daty przyjęcia, a długość kolejki nie mierzy jakości leczenia. Braki nigdy nie są zastępowane zerem. Pierwszy pomiar nie wystarcza do ustalenia trendu.
 
-Budżety: 850 MiB na zestawienia jednej publikacji, 900 MiB na aktywne pliki archiwum i 90 MiB na pojedynczy plik. Przekroczenie zatrzymuje publikację bez usuwania historii. Przy wieloletnim wzroście przenieś zamknięte roczniki do osobnych repozytoriów archiwalnych, zapisz ich adresy i SHA oraz przetestuj odtworzenie. Rotacja nie jest automatyczna. Monitoruj też rozmiar pełnego klonu Git. Publiczne standardowe runnery Actions są bezpłatne; limity Pages i Actions należy okresowo sprawdzać w dokumentacji GitHub.
+Budżety: 850 MiB na zestawienia jednej publikacji, 1200 MiB na aktywne pliki archiwum i 90 MiB na pojedynczy plik. Przekroczenie zatrzymuje publikację bez usuwania historii. Przy wieloletnim wzroście przenieś zamknięte roczniki do osobnych repozytoriów archiwalnych, zapisz ich adresy i SHA oraz przetestuj odtworzenie. Rotacja nie jest automatyczna. Monitoruj też rozmiar pełnego klonu Git. Publiczne standardowe runnery Actions są bezpłatne; limity Pages i Actions należy okresowo sprawdzać w dokumentacji GitHub.
 
 ## Weryfikacja i zasoby
 
