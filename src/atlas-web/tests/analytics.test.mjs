@@ -9,6 +9,7 @@ import {
 } from "../src/app/core/analytics/queue-analytics.js";
 const row = {
   id: "a",
+  facilityId: "f1",
   case: 1,
   benefitId: "cardio",
   province: "07",
@@ -32,6 +33,7 @@ const filters = {
 };
 const point = {
   id: "a",
+  facilityId: "f1",
   case: 1,
   reportingPeriod: "2026-09",
   pcusUpdatedAt: "2026-10-01",
@@ -66,7 +68,10 @@ test("history uses source periods and last revision, never retrieval date", () =
 });
 test("PCUS timeline uses source update dates and a median", () => {
   assert.deepEqual(
-    periodSeries([point, { ...point, id: "b", pcusDays: 9 }], "pcusDays"),
+    periodSeries(
+      [point, { ...point, id: "b", facilityId: "f2", pcusDays: 9 }],
+      "pcusDays",
+    ),
     [{ period: "2026-10-01", value: 6, coverage: 2 }],
   );
 });
@@ -75,7 +80,7 @@ test("comparison includes only common queues and same category", () => {
   const data = [
     point,
     next,
-    { ...next, id: "new", awaiting: 100 },
+    { ...next, id: "new", facilityId: "other", awaiting: 100 },
     { ...point, case: 2, awaiting: 99 },
   ];
   assert.deepEqual(changes(data, "awaiting", "2026-09", "2026-10"), [

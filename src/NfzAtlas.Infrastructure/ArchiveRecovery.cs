@@ -22,7 +22,9 @@ public static class ArchiveRecovery
                             .EnumerateObject()
                             .Where(p => !string.Equals(p.Name, "id", StringComparison.Ordinal))
                             .OrderBy(p => p.Name, StringComparer.Ordinal)
-                            .Select(p => JsonSerializer.Serialize(p.Name) + ":" + Canonical(p.Value))
+                            .Select(p =>
+                                JsonSerializer.Serialize(p.Name) + ":" + Canonical(p.Value)
+                            )
                     )
                     + "}",
                 JsonValueKind.Array => "["
@@ -46,7 +48,7 @@ public static class ArchiveRecovery
         if (files.Length == 0)
             throw new InvalidDataException("Puste archiwum; nie usunięto istniejącej historii.");
         var histories = new Dictionary<string, List<Observation>>();
-        var latest = new Dictionary<(string, int), Observation>();
+        var latest = new Dictionary<string, Observation>();
         var count = 0;
         foreach (var file in files)
         {

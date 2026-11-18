@@ -109,7 +109,15 @@ public sealed class PipelineTests : IDisposable
         var old = q with { Awaiting = 100, ReportingPeriod = "2026-09" };
         var result = Analytics.Summarize(
             "x",
-            [q, q with { Id = Guid.NewGuid().ToString(), FacilityId = "another-facility", Awaiting = 1000 }],
+            [
+                q,
+                q with
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    FacilityId = "another-facility",
+                    Awaiting = 1000,
+                },
+            ],
             [O(old)],
             new(2026, 11, 9)
         );
