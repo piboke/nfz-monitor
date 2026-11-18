@@ -85,8 +85,10 @@ public sealed class Crawler(INfzSource source, string checkpointRoot)
         var ids = new HashSet<string>();
         foreach (var r in result)
         {
-            var row = Normalization.Map(r, partition);
-            if (!ids.Add(row.Id))
+            var sourceId = r.GetProperty("id").GetString();
+            if (string.IsNullOrWhiteSpace(sourceId))
+                throw new InvalidDataException("Brak prawidłowego UUID kolejki.");
+            if (!ids.Add(sourceId))
                 throw new InvalidDataException(
                     "Powtórzony UUID pomiędzy stronami; niestabilna paginacja NFZ. Nie publikujemy niepełnych danych."
                 );

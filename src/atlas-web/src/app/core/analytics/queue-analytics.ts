@@ -49,12 +49,13 @@ export function periodSeries(
   from = "",
   to = "",
 ): PeriodPoint[] {
+  const queueKey = (p: HistoryPoint) => `${p.case}|${p.facilityId}|${p.benefitId}`;
   const pcus = metric === "pcusDays";
   const revisions = new Map<string, HistoryPoint>();
   for (const p of history) {
     const period = pcus ? p.pcusUpdatedAt : p.reportingPeriod;
     if (!period || (from && period < from) || (to && period > to)) continue;
-    const key = p.id + "|" + p.case + "|" + period;
+    const key = queueKey(p) + "|" + period;
     const old = revisions.get(key);
     if (!old || old.retrievedAt < p.retrievedAt) revisions.set(key, p);
   }
@@ -84,12 +85,13 @@ export function changes(
   from: string,
   to: string,
 ): QueueChange[] {
+  const queueKey = (p: HistoryPoint) => `${p.case}|${p.facilityId}|${p.benefitId}`;
   const pcus = metric === "pcusDays";
   const at = (period: string) => {
     const m = new Map<string, HistoryPoint>();
     for (const p of history) {
       if ((pcus ? p.pcusUpdatedAt : p.reportingPeriod) !== period) continue;
-      const key = p.id + "|" + p.case;
+      const key = queueKey(p);
       const old = m.get(key);
       if (!old || old.retrievedAt < p.retrievedAt) m.set(key, p);
     }
