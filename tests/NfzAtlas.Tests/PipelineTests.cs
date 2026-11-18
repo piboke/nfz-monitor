@@ -327,6 +327,10 @@ public sealed class PipelineTests : IDisposable
     }
 
     [Fact]
+    public void ArchiveBudgetAllowsCurrentRetentionWindow() =>
+        Assert.Equal(1200L * 1024 * 1024, Publisher.ArchiveSizeLimit);
+
+    [Fact]
     public async Task PublicationIsIdempotentAndPreservesHistoryAcrossBuilds()
     {
         var raw = Fixture().GetProperty("data")[0].Clone();
