@@ -336,8 +336,7 @@ public sealed class Publisher(string dataRoot)
         if (
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > ArchiveSizeLimit
+                .Sum(f => new FileInfo(f).Length) > ArchiveSizeLimit
         )
             throw new IOException(
                 "Archiwum przekroczyło 1200 MiB. Wymagana rotacja repozytorium archiwalnego."
@@ -357,8 +356,7 @@ public sealed class Publisher(string dataRoot)
         if (
             Directory
                 .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > ArchiveSizeLimit
+                .Sum(f => new FileInfo(f).Length) > ArchiveSizeLimit
         )
             throw new IOException("Archiwum przekroczyło 1200 MiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
