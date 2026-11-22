@@ -84,6 +84,7 @@ export interface Manifest {
   queueCount: number;
   providerCount?: number;
   facilityCount?: number;
+  compressedProviders?: boolean;
   generation: string;
 }
 export interface Summary {

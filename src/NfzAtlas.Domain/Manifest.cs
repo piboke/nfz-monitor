@@ -18,5 +18,6 @@ public sealed record Manifest(
     int QueueCount,
     string Generation,
     int ProviderCount = 0,
-    int FacilityCount = 0
+    int FacilityCount = 0,
+    bool CompressedProviders = false
 );
