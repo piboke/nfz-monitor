@@ -198,7 +198,7 @@ public sealed class Publisher(string dataRoot)
                 }
                 historyWrites.Add((historyPath, history.ToArray()));
                 var jsonPath = $"aggregates/{generation}/{key}.json";
-                var chartPath = $"aggregates/{generation}/{key}.history.json";
+                var chartPath = $"aggregates/{generation}/{key}.history.json.gz";
                 await JsonFiles.Write(Path.Combine(dataRoot, jsonPath), rows, ct);
                 await JsonFiles.Write(
                     Path.Combine(dataRoot, chartPath),
@@ -307,7 +307,8 @@ public sealed class Publisher(string dataRoot)
             allRows.Count,
             generation,
             providerCount,
-            facilityCount
+            facilityCount,
+            CompressedProviders: true
         );
         var historyByProvider = allHistory
             .GroupBy(o => (o.Queue.Province, o.Queue.ProviderCode))
@@ -319,7 +320,7 @@ public sealed class Publisher(string dataRoot)
                     stage,
                     "providers",
                     provider.Key.Province,
-                    Identity.ProviderFileKey(provider.Key.ProviderCode) + ".json"
+                    Identity.ProviderFileKey(provider.Key.ProviderCode) + ".json.gz"
                 ),
                 new { rows = provider.ToArray(), history = historyByProvider[provider.Key] },
                 ct
@@ -331,15 +332,6 @@ public sealed class Publisher(string dataRoot)
         if (bytes > 850L * 1024 * 1024)
             throw new IOException(
                 "Zestawienia przekroczyły budżet 850 MiB GitHub Pages. Publikacja wstrzymana."
-            );
-        if (
-            Directory
-                .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
-        )
-            throw new IOException(
-                "Archiwum przekroczyło 900 MiB. Wymagana rotacja repozytorium archiwalnego."
             );
         // Manifest is the commit point. Consumers never see a generation without all its files.
         foreach (var write in historyWrites)
@@ -353,13 +345,6 @@ public sealed class Publisher(string dataRoot)
         foreach (var file in Directory.EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories))
             if (new FileInfo(file).Length > 90L * 1024 * 1024)
                 throw new IOException("Plik przekroczył 90 MiB; wymagany dalszy podział archiwum.");
-        if (
-            Directory
-                .EnumerateFiles(dataRoot, "*", SearchOption.AllDirectories)
-                .Sum(f => new FileInfo(f).Length)
-            > 900L * 1024 * 1024
-        )
-            throw new IOException("Archiwum przekroczyło 900 MiB.");
         await JsonFiles.Write(Path.Combine(dataRoot, "manifest.json"), manifest, ct);
         foreach (var dir in Directory.EnumerateDirectories(Path.Combine(dataRoot, "aggregates")))
             if (Path.GetFileName(dir) != generation)

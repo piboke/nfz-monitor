@@ -48,6 +48,10 @@ export class DatasetRepository {
                 r.status +
                 "). Spróbuj ponownie.",
             );
+          if (path.endsWith(".json.gz") && r.body) {
+            const json = r.body.pipeThrough(new DecompressionStream("gzip"));
+            return new Response(json).json();
+          }
           return r.json();
         })
         .catch((e) => {
@@ -134,8 +138,10 @@ export class DatasetRepository {
   }
   async provider(province: string, code: string) {
     const fileKey = providerFileKey(code);
+    const manifest = this.manifest()!;
+    const suffix = manifest.compressedProviders ? ".json.gz" : ".json";
     return this.read<{ rows: QueueRow[]; history: HistoryPoint[] }>(
-      `aggregates/${this.manifest()!.generation}/providers/${province}/${fileKey}.json`,
+      `aggregates/${manifest.generation}/providers/${province}/${fileKey}${suffix}`,
     );
   }
 }

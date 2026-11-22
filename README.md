@@ -102,7 +102,7 @@ Porównania obejmują wspólne identyfikatory kolejek, kategorię, świadczenie 
 
 Wpisy w kolejkach nie są liczbą unikalnych pacjentów, skreśleni z powodu udzielenia świadczenia nie oznaczają wszystkich procedur, PCUŚ nie gwarantuje daty przyjęcia, a długość kolejki nie mierzy jakości leczenia. Braki nigdy nie są zastępowane zerem. Pierwszy pomiar nie wystarcza do ustalenia trendu.
 
-Budżety: 850 MiB na zestawienia jednej publikacji, 900 MiB na aktywne pliki archiwum i 90 MiB na pojedynczy plik. Przekroczenie zatrzymuje publikację bez usuwania historii. Przy wieloletnim wzroście przenieś zamknięte roczniki do osobnych repozytoriów archiwalnych, zapisz ich adresy i SHA oraz przetestuj odtworzenie. Rotacja nie jest automatyczna. Monitoruj też rozmiar pełnego klonu Git. Publiczne standardowe runnery Actions są bezpłatne; limity Pages i Actions należy okresowo sprawdzać w dokumentacji GitHub.
+Zestawienia jednej publikacji mają budżet 850 MiB. Serie historyczne i dane świadczeniodawców są zapisywane jako gzip i rozpakowywane w przeglądarce. Frontend obsługuje także wcześniejsze publikacje w JSON. Limit 90 MiB na pojedynczy plik chroni zapis na gałęzi `data`. Archiwum źródłowe i historia przechowywane na tej gałęzi są poza budżetem witryny. Przy dłuższym wzroście monitoruj pełny rozmiar repozytorium Git. Rotacja archiwum nie jest automatyczna.
 
 ## Weryfikacja i zasoby
 

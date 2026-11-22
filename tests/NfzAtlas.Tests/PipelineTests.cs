@@ -314,16 +314,21 @@ public sealed class PipelineTests : IDisposable
             default
         );
         Assert.Equal(fileKey, Identity.ProviderFileKey(code));
+        Assert.True(manifest.CompressedProviders);
         var path = Path.Combine(
             root,
             "aggregates",
             manifest.Generation,
             "providers",
             "07",
-            fileKey + ".json"
+            fileKey + ".json.gz"
         );
         var detail = await JsonFiles.Read<JsonElement>(path);
         Assert.Equal(code, detail.GetProperty("rows")[0].GetProperty("providerCode").GetString());
+        Assert.Equal(
+            detail.GetProperty("rows")[0].GetProperty("id").GetString(),
+            detail.GetProperty("history")[0].GetProperty("id").GetString()
+        );
     }
 
     [Fact]
@@ -490,6 +495,7 @@ public sealed class PipelineTests : IDisposable
             default
         );
         Assert.Equal(2, Directory.GetFiles(Path.Combine(root, "snapshots")).Length);
+        Assert.EndsWith(".history.json.gz", m.Shards[0].HistoryPath);
         var history = await JsonFiles.Read<HistoryPoint[]>(
             Path.Combine(root, m.Shards[0].HistoryPath)
         );
